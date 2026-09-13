@@ -30,19 +30,22 @@ jobs:
             6.x.x
             5.x.x
 
-      - name: Test
+      - name: apt-get for net5.0
         run: |
           sudo apt-get update
-          sudo apt-get install libssl
+          sudo apt-get install -y libssl-dev          
 
-          dotnet build --project ./sandbox
-
+      - name: Test
+        run: |
           test()
           {
             local framework="$1"
 
+            dotnet build --project ./sandbox -f "$framework"
+
             {
               echo "## $framework"
+              echo
               echo '```'
               dotnet run \
                 --project ./sandbox \
