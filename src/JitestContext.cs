@@ -28,7 +28,6 @@ public static class JitestContext
     /// Serializing test methods via <see cref="BeginTestMethod"/> should be used when dynamic runtime interception during test execution is strictly required. Note that every test method that can reach an intercepted method (or share process-wide state affected by hooks) must acquire this scope to ensure proper isolation.
     /// </para>
     /// </remarks>
-    /// <inheritdoc cref="ScopeDisposable"/>
     /// <returns><see cref="IDisposable"/></returns>
     public static ScopeDisposable BeginTestMethod()
     {
