@@ -6,7 +6,7 @@ JIT-time Method Interceptor for Unit Testing
 
 </div>
 
-Jitest is an experimental C# library for replacing method behavior entirely from test code. It keeps test-only abstractions such as interfaces, `virtual` members, and others out of production design.
+`Jitest` is an experimental C# library for replacing method behavior entirely from test code. It keeps test-only abstractions such as interfaces, `virtual` members, and others out of production design.
 
 ```cs
 typeof(Stopwatch)
