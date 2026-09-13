@@ -28,7 +28,7 @@ Console.WriteLine();
 
     Console.WriteLine($"  1) During intercept:   Calc.Sum(1, 2) = {CalcBase.Sum(1, 2)}  (expected: 42)");
 }
-Console.WriteLine($"  2) After dispose:      Calc.Sum(1, 2) = {CalcBase.Sum(1, 2)}  (expected: 3)");
+Console.WriteLine($"  2) After dispose:      Calc.Sum(1, 2)  = {CalcBase.Sum(1, 2)}  (expected: 3)");
 
 Console.WriteLine();
 Console.WriteLine("--- Instance Method ---");
@@ -43,8 +43,8 @@ var otherCalc = new CalcBase();
     var targetCC = new CalculatorController(targetCalc);
     var otherCC = new CalculatorController(otherCalc);
 
-    Console.WriteLine($"  3) During intercept, target instance:      targetCC.Multiply(3, 4) = {targetCC.Multiply(3, 4)}  (expected: 99)");
-    Console.WriteLine($"  4) During intercept, DIFFERENT instance:   otherCC.Multiply(3, 4)  = {otherCC.Multiply(3, 4)}  (expected: 12)");
+    Console.WriteLine($"  3) During intercept, target instance:      targetCC.Multiply(3, 4)   = {targetCC.Multiply(3, 4)}  (expected: 99)");
+    Console.WriteLine($"  4) During intercept, DIFFERENT instance:   otherCC.Multiply(3, 4)    = {otherCC.Multiply(3, 4)}  (expected: 12)");
 }
 Console.WriteLine($"  5) After dispose:                          targetCalc.Multiply(3, 4) = {targetCalc.Multiply(3, 4)}  (expected: 12)");
 
@@ -57,9 +57,9 @@ Console.WriteLine();
     using var jitest = typeof(Stopwatch)
         .Jitest<Func<long, TimeSpan>>(nameof(Stopwatch.GetElapsedTime), out _)
         .Intercept(static (long _) => new TimeSpan(9, 8, 7, 6, 5, 4));
-    Console.WriteLine($"  Stopwatch.GetElapsedTime(123456789):  {Stopwatch.GetElapsedTime(123456789)}  (expected: 9d 8h 7m 6s 5ms 4us)");
+    Console.WriteLine($"  Stopwatch.GetElapsedTime(123456789) = {Stopwatch.GetElapsedTime(123456789)}  (expected: 9d 8h 7m 6s 5ms 4us)");
 }
-Console.WriteLine($"  Stopwatch.GetElapsedTime(123456789):  {Stopwatch.GetElapsedTime(123456789)}  (reverted to original)");
+Console.WriteLine($"  Stopwatch.GetElapsedTime(123456789) =   {Stopwatch.GetElapsedTime(123456789)}  (reverted to original)");
 
 #endif
 
