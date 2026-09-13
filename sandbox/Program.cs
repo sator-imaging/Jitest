@@ -28,7 +28,7 @@ Console.WriteLine();
 
     Console.WriteLine($"  1) During intercept:   Calc.Sum(1, 2) = {CalcBase.Sum(1, 2)}  (expected: 42)");
 }
-Console.WriteLine($"  2) After dispose:      Calc.Sum(1, 2)  = {CalcBase.Sum(1, 2)}  (expected: 3)");
+Console.WriteLine($"  2) After dispose:      Calc.Sum(1, 2) = {CalcBase.Sum(1, 2)}   (expected: 3)");
 
 Console.WriteLine();
 Console.WriteLine("--- Instance Method ---");
