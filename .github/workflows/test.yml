@@ -32,9 +32,28 @@ jobs:
 
       - name: Test
         run: |
-          dotnet run --project ./sandbox  -f net10.0  -c ${{ matrix.configuration }}
-          dotnet run --project ./sandbox  -f net9.0   -c ${{ matrix.configuration }}
-          dotnet run --project ./sandbox  -f net8.0   -c ${{ matrix.configuration }}
-          dotnet run --project ./sandbox  -f net7.0   -c ${{ matrix.configuration }}
-          dotnet run --project ./sandbox  -f net6.0   -c ${{ matrix.configuration }}
-          dotnet run --project ./sandbox  -f net5.0   -c ${{ matrix.configuration }}
+          sudo apt-get update
+          sudo apt-get install libssl
+
+          dotnet build --project ./sandbox
+
+          test()
+          {
+            local framework="$1"
+
+            {
+              echo "## $framework"
+              echo '```'
+              dotnet run \
+                --project ./sandbox \
+                -f "$framework" \
+                --no-build \
+                -c "${{ matrix.configuration }}"
+              echo '```'
+              echo
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          for framework in net10.0 net9.0 net8.0 net7.0 net6.0 net5.0; do
+            test "$framework"
+          done
