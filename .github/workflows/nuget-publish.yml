@@ -17,6 +17,7 @@ jobs:
 
     permissions:
       id-token: write  # enable GitHub OIDC token issuance for this job
+      contents: read
 
     strategy:
       matrix:
