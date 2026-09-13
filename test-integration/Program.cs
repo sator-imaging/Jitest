@@ -7,6 +7,9 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
+using TUnit.Core;
 
 #pragma warning disable SMA8000 // Literal Should Be Passed as Named Argument
 #pragma warning disable SMA7002 // Lambda Allocation
@@ -14,138 +17,111 @@ using System.Threading.Tasks;
 #pragma warning disable SMA0040 // Missing Using Statement
 #pragma warning disable CA1822  // Mark members as static
 
-Console.WriteLine("=== Jitest Integration Test (NuGet Package) ===");
-Console.WriteLine();
-Console.WriteLine($"  Runtime: {Environment.Version}");
-Console.WriteLine();
+namespace Jitest.IntegrationTest;
 
-int failures = 0;
-
-void AssertEqual<T>(T actual, T expected, string testName)
+public class IntegrationTests
 {
-    if (Equals(actual, expected))
+    [Test]
+    public async Task TestStaticMethodInterception()
     {
-        Console.WriteLine($"  [PASS] {testName}: {actual}");
+        using (var jitest = typeof(CalcBase)
+            .Jitest<Func<int, int, int>>("SumCore", out _)
+            .Intercept(static (int a, int b) => 42))
+        {
+            await Assert.That(CalcBase.Sum(1, 2)).IsEqualTo(42);
+        }
+        await Assert.That(CalcBase.Sum(1, 2)).IsEqualTo(3);
     }
-    else
+
+    [Test]
+    public async Task TestInstanceMethodInterceptionAndFiltering()
     {
-        Console.WriteLine($"  [FAIL] {testName}: got {actual}, expected {expected}");
-        failures++;
+        var targetCalc = new Calculator();
+        var otherCalc = new CalcBase();
+
+        using (var jitest = targetCalc
+            .Jitest<Func<int, int, int>>(nameof(CalcBase.Multiply), out var originalMethod)
+            .Intercept((Calculator instance, int a, int b) => instance == targetCalc ? 99 : originalMethod.Invoke(a, b)))
+        {
+            var targetCC = new CalculatorController(targetCalc);
+            var otherCC = new CalculatorController(otherCalc);
+
+            await Assert.That(targetCC.Multiply(3, 4)).IsEqualTo(99);
+            await Assert.That(otherCC.Multiply(3, 4)).IsEqualTo(12);
+        }
+        await Assert.That(targetCalc.Multiply(3, 4)).IsEqualTo(12);
     }
-}
-
-Console.WriteLine("--- Test 1: Static Method Interception ---");
-{
-    using (var jitest = typeof(CalcBase)
-        .Jitest<Func<int, int, int>>("SumCore", out _)
-        .Intercept(static (int a, int b) => 42))
-    {
-        AssertEqual(CalcBase.Sum(1, 2), 42, "During intercept");
-    }
-    AssertEqual(CalcBase.Sum(1, 2), 3, "After dispose");
-}
-
-Console.WriteLine();
-Console.WriteLine("--- Test 2: Instance Method Interception & Target Filtering ---");
-{
-    var targetCalc = new Calculator();
-    var otherCalc = new CalcBase();
-
-    using (var jitest = targetCalc
-        .Jitest<Func<int, int, int>>(nameof(CalcBase.Multiply), out var originalMethod)
-        .Intercept((Calculator instance, int a, int b) => instance == targetCalc ? 99 : originalMethod.Invoke(a, b)))
-    {
-        var targetCC = new CalculatorController(targetCalc);
-        var otherCC = new CalculatorController(otherCalc);
-
-        AssertEqual(targetCC.Multiply(3, 4), 99, "Target instance");
-        AssertEqual(otherCC.Multiply(3, 4), 12, "Other instance");
-    }
-    AssertEqual(targetCalc.Multiply(3, 4), 12, "After dispose");
-}
 
 #if NET7_0_OR_GREATER
-Console.WriteLine();
-Console.WriteLine("--- Test 3: Stopwatch Method Interception ---");
-{
-    var expectedSpan = new TimeSpan(9, 8, 7, 6, 5, 4);
-    using (var jitest = typeof(Stopwatch)
-        .Jitest<Func<long, TimeSpan>>(nameof(Stopwatch.GetElapsedTime), out _)
-        .Intercept((long _) => expectedSpan))
+    [Test]
+    public async Task TestStopwatchMethodInterception()
     {
-        AssertEqual(Stopwatch.GetElapsedTime(123456789), expectedSpan, "During Stopwatch intercept");
+        var expectedSpan = new TimeSpan(9, 8, 7, 6, 5, 4);
+        using (var jitest = typeof(Stopwatch)
+            .Jitest<Func<long, TimeSpan>>(nameof(Stopwatch.GetElapsedTime), out _)
+            .Intercept((long _) => expectedSpan))
+        {
+            await Assert.That(Stopwatch.GetElapsedTime(123456789)).IsEqualTo(expectedSpan);
+        }
     }
-}
 #endif
 
-Console.WriteLine();
-Console.WriteLine("--- Test 4: HttpClient Method Interception ---");
-{
-    using var client = new HttpClient();
-    using (var jitest = client
-        .Jitest<Func<string, Task<HttpResponseMessage>>>(nameof(HttpClient.GetAsync), out _)
-        .Intercept(static (HttpClient _, string _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotExtended) { Version = new(310, 42) })))
+    [Test]
+    public async Task TestHttpClientMethodInterception()
     {
-        var response = client.GetAsync("https://yahoo.co.jp/").Result;
-        AssertEqual(response.StatusCode, HttpStatusCode.NotExtended, "HttpClient StatusCode during intercept");
-        AssertEqual(response.Version, new Version(310, 42), "HttpClient Version during intercept");
-    }
-}
-
-Console.WriteLine();
-Console.WriteLine("--- Test 5: JitestContext Test Method Scope ---");
-{
-    using (var scope1 = JitestContext.BeginTestMethod())
-    {
-        // Trying to acquire on another thread within timeout should wait/fail if locked
-        var task = Task.Run(() =>
+        using var client = new HttpClient();
+        using (var jitest = client
+            .Jitest<Func<string, Task<HttpResponseMessage>>>(nameof(HttpClient.GetAsync), out _)
+            .Intercept(static (HttpClient _, string _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotExtended) { Version = new(310, 42) })))
         {
-            using var scope2 = JitestContext.BeginTestMethod();
-            return true;
-        });
-
-        // Delay brief moment to ensure scope1 holds global semaphore
-        bool completed = task.Wait(100);
-        AssertEqual(completed, false, "Second thread should be blocked by JitestContext scope lock");
-    }
-
-    // After dispose of scope1, acquiring scope2 should succeed
-    using (var scope2 = JitestContext.BeginTestMethod())
-    {
-        AssertEqual(true, true, "JitestContext acquired successfully after release");
-    }
-}
-
-Console.WriteLine();
-Console.WriteLine("--- Test 6: Exception Handling in Intercepted Method ---");
-{
-    bool exceptionThrown = false;
-    using (var jitest = typeof(CalcBase)
-        .Jitest<Func<int, int, int>>("SumCore", out _)
-        .Intercept(new Func<int, int, int>((int a, int b) => throw new InvalidOperationException("Test exception"))))
-    {
-        try
-        {
-            CalcBase.Sum(1, 2);
-        }
-        catch (InvalidOperationException ex) when (ex.Message == "Test exception")
-        {
-            exceptionThrown = true;
+            var response = await client.GetAsync("https://yahoo.co.jp/");
+            await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotExtended);
+            await Assert.That(response.Version).IsEqualTo(new Version(310, 42));
         }
     }
-    AssertEqual(exceptionThrown, true, "Exception thrown inside interceptor reached caller");
-    AssertEqual(CalcBase.Sum(1, 2), 3, "Original method intact after exception");
-}
 
-Console.WriteLine();
-if (failures > 0)
-{
-    Console.WriteLine($"[FAILED] {failures} test(s) failed.");
-    return 1;
-}
+    [Test]
+    public async Task TestJitestContextScope()
+    {
+        using (var scope1 = JitestContext.BeginTestMethod())
+        {
+            var task = Task.Run(() =>
+            {
+                using var scope2 = JitestContext.BeginTestMethod();
+                return true;
+            });
 
-Console.WriteLine("=== All integration tests passed! ===");
-return 0;
+            bool completed = task.Wait(100);
+            await Assert.That(completed).IsFalse();
+        }
+
+        using (var scope2 = JitestContext.BeginTestMethod())
+        {
+            await Assert.That(true).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task TestExceptionHandlingInInteractions()
+    {
+        bool exceptionThrown = false;
+        using (var jitest = typeof(CalcBase)
+            .Jitest<Func<int, int, int>>("SumCore", out _)
+            .Intercept(new Func<int, int, int>((int a, int b) => throw new InvalidOperationException("Test exception"))))
+        {
+            try
+            {
+                CalcBase.Sum(1, 2);
+            }
+            catch (InvalidOperationException ex) when (ex.Message == "Test exception")
+            {
+                exceptionThrown = true;
+            }
+        }
+        await Assert.That(exceptionThrown).IsTrue();
+        await Assert.That(CalcBase.Sum(1, 2)).IsEqualTo(3);
+    }
+}
 
 internal class CalcBase
 {
