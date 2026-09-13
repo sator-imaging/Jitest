@@ -7,7 +7,7 @@ JIT-time Method Interceptor for Unit Testing
 [![NuGet](https://img.shields.io/nuget/vpre/Jitest)](https://www.nuget.org/packages/Jitest)
 &nbsp;
 [![🇺🇸](https://img.shields.io/badge/🇺🇸-English-789)](./README.md)
-[![🇯🇵](https://img.shields.io/badge/🇯🇵-日本語_※詳説-789)](https://zenn.dev/sator_imaging)
+[![🇯🇵](https://img.shields.io/badge/🇯🇵-日本語_※詳説-789)](https://zenn.dev/sator_imaging/articles/2a4204dd54cd1f)
 
 </div>
 
