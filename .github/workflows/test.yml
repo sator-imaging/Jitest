@@ -19,6 +19,11 @@ jobs:
         configuration: [ Debug, Release ]
 
     steps:
+      - name: Deps for net5.0
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev          
+
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5      # v4.3.1
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4.3.1
         with:
@@ -30,18 +35,13 @@ jobs:
             6.x.x
             5.x.x
 
-      - name: apt-get for net5.0
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libssl-dev          
-
       - name: Test
         run: |
           test()
           {
             local framework="$1"
 
-            dotnet build --project ./sandbox -f "$framework"
+            dotnet build ./sandbox -f "$framework"
 
             {
               echo "## $framework"
