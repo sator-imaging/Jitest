@@ -19,7 +19,7 @@ Console.WriteLine();
 Console.WriteLine($"  Runtime: {Environment.Version}");
 Console.WriteLine();
 
-Console.WriteLine("--- Static Method (private) ---");
+Console.WriteLine("--- Static Method (private int SumCore) ---");
 Console.WriteLine();
 {
     using var jitest = typeof(CalcBase)
