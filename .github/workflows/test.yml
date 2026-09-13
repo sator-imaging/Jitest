@@ -39,14 +39,25 @@ jobs:
             local framework="$1"
 
             dotnet build ./sandbox -f "$framework"
+            dotnet build ./test-integration -f "$framework"
 
             {
-              echo "## $framework"
+              echo "## $framework (Sandbox)"
               echo
               echo '```'
               dotnet run \
                 -p:NoWarn=NETSDK1138 \
                 --project ./sandbox \
+                -f "$framework" \
+                -c "${{ matrix.configuration }}"
+              echo '```'
+              echo
+              echo "## $framework (Integration Test)"
+              echo
+              echo '```'
+              dotnet run \
+                -p:NoWarn=NETSDK1138 \
+                --project ./test-integration \
                 -f "$framework" \
                 -c "${{ matrix.configuration }}"
               echo '```'
