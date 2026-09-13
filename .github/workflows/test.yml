@@ -16,7 +16,6 @@ jobs:
     runs-on: ubuntu-slim
     strategy:
       matrix:
-        dotnet-major: [ '10', '9', '8', '7', '6', '5' ]
         configuration: [ Debug, Release ]
 
     steps:
@@ -24,10 +23,18 @@ jobs:
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4.3.1
         with:
           dotnet-version: |
-            ${{ dotnet-major }}.x.x
+            10.x.x
+            9.x.x
+            8.x.x
+            7.x.x
+            6.x.x
+            5.x.x
 
       - name: Test
         run: |
-          dotnet run -c ${{ matrix.configuration }} \
-            -f net${{ matrix.dotnet-major }}.0 \
-            --project ./sandbox
+          dotnet run --project ./sandbox  -f net10.0  -c ${{ matrix.configuration }}
+          dotnet run --project ./sandbox  -f net9.0   -c ${{ matrix.configuration }}
+          dotnet run --project ./sandbox  -f net8.0   -c ${{ matrix.configuration }}
+          dotnet run --project ./sandbox  -f net7.0   -c ${{ matrix.configuration }}
+          dotnet run --project ./sandbox  -f net6.0   -c ${{ matrix.configuration }}
+          dotnet run --project ./sandbox  -f net5.0   -c ${{ matrix.configuration }}
