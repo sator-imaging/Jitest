@@ -19,7 +19,7 @@ Console.WriteLine();
 Console.WriteLine($"  Runtime: {Environment.Version}");
 Console.WriteLine();
 
-Console.WriteLine("--- Static Method ---");
+Console.WriteLine("--- Static Method (private) ---");
 Console.WriteLine();
 {
     using var jitest = typeof(CalcBase)
@@ -31,7 +31,7 @@ Console.WriteLine();
 Console.WriteLine($"  2) After dispose:      Calc.Sum(1, 2) = {CalcBase.Sum(1, 2)}   (expected: 3)");
 
 Console.WriteLine();
-Console.WriteLine("--- Instance Method ---");
+Console.WriteLine("--- Instance Method (DI: Calc <- CalcController) ---");
 Console.WriteLine();
 var targetCalc = new Calculator();
 var otherCalc = new CalcBase();
@@ -51,7 +51,7 @@ Console.WriteLine($"  5) After dispose:                          targetCalc.Mult
 #if NET7_0_OR_GREATER
 
 Console.WriteLine();
-Console.WriteLine("--- Stopwatch Methods ---");
+Console.WriteLine("--- Stopwatch Method ---");
 Console.WriteLine();
 {
     using var jitest = typeof(Stopwatch)
@@ -64,7 +64,7 @@ Console.WriteLine($"  Stopwatch.GetElapsedTime(123456789) =   {Stopwatch.GetElap
 #endif
 
 Console.WriteLine();
-Console.WriteLine("--- HttpClient Methods ---");
+Console.WriteLine("--- HttpClient Method ---");
 Console.WriteLine();
 using var client = new HttpClient();
 {
