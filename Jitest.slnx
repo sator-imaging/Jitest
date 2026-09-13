@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="./src/Jitest.csproj" />
+  <Project Path="./sandbox/Jitest.Sandbox.csproj" />
+</Solution>
