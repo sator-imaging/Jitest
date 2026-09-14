@@ -6,6 +6,7 @@ obj
 !.github
 !sandbox
 !src
+!eng
 
 !.gitignore
 !Directory.Build.props
