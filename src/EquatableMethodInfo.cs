@@ -2,7 +2,6 @@
 // https://github.com/sator-imaging/Jitest
 
 using System;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -13,46 +12,53 @@ namespace Jitest;
 [StructLayout(LayoutKind.Auto)]
 internal readonly struct EquatableMethodInfo : IEquatable<EquatableMethodInfo>
 {
-    readonly Type type;
-    readonly string methodName;
-    readonly Type[] parameters;
+    readonly int hashCode;
 
-    EquatableMethodInfo(Type? type, string methodName, Type[] parameters, MethodInfo methodInfo)
+    EquatableMethodInfo(MethodInfo methodInfo)
     {
-        if (type == null)
+        if (methodInfo == null)
         {
-            JitestException.ThrowArgumentNull(nameof(type));
+            JitestException.ThrowArgumentNull(nameof(methodInfo));
         }
 
-        this.type = type;
-        this.methodName = methodName;
-        this.parameters = parameters;
         this.MethodInfo = methodInfo;
+        // Don't include parameters!! Array hash is not based on its contents!!
+        this.hashCode = HashCode.Combine(methodInfo.DeclaringType, methodInfo.Name);
     }
 
-    public static implicit operator EquatableMethodInfo(MethodInfo info)
-    {
-        var rawParams = info.GetParameters();
-        var parameters = new Type[rawParams.Length];
-
-        for (int i = 0; i < parameters.Length; i++)
-        {
-            parameters[i] = rawParams[i].ParameterType;
-        }
-
-        return new(info.DeclaringType, info.Name, parameters, info);
-    }
+    public static implicit operator EquatableMethodInfo(MethodInfo info) => new(info);
 
     internal MethodInfo MethodInfo { get; }
 
-    // Don't include parameters!! Array hash is not based on its contents!!
-    public override int GetHashCode() => HashCode.Combine(this.type, this.methodName);
+    public override int GetHashCode() => this.hashCode;
     public override bool Equals(object? obj) => obj is EquatableMethodInfo other && this.Equals(other);
     public bool Equals(EquatableMethodInfo other)
     {
-        return other.type == type
-            && other.methodName == methodName
-            && other.parameters.SequenceEqual(parameters);
+        var info = this.MethodInfo;
+        var otherInfo = other.MethodInfo;
+
+        if (otherInfo.DeclaringType != info.DeclaringType || otherInfo.Name != info.Name)
+        {
+            return false;
+        }
+
+        var params1 = info.GetParameters();
+        var params2 = otherInfo.GetParameters();
+
+        if (params1.Length != params2.Length)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < params1.Length; i++)
+        {
+            if (params1[i].ParameterType != params2[i].ParameterType)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
     public static bool operator ==(EquatableMethodInfo left, EquatableMethodInfo right) => left.Equals(right);
     public static bool operator !=(EquatableMethodInfo left, EquatableMethodInfo right) => !(left == right);
