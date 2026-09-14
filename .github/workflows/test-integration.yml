@@ -36,7 +36,6 @@ jobs:
               echo
               echo '```'
               dotnet run \
-                -p:NoWarn="%24(NoWarn)%3BNETSDK1138" \
                 --project ./test-integration \
                 -f "$framework" \
                 -c "${{ matrix.configuration }}"

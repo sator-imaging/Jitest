@@ -44,6 +44,7 @@ jobs:
               echo "## $framework (Sandbox)"
               echo
               echo '```'
+              # %24 is '$' and %3B is ';' URL-encoded so MSBuild parses $(NoWarn);NETSDK1138 correctly in bash without splitting parameters on semicolons
               dotnet run \
                 -p:NoWarn="%24(NoWarn)%3BNETSDK1138" \
                 --project ./sandbox \
