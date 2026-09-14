@@ -41,17 +41,18 @@ public class IntegrationTests
         var targetCalc = new Calculator();
         var otherCalc = new CalcBase();
 
+        var targetCC = new CalculatorController(targetCalc);
+        var otherCC = new CalculatorController(otherCalc);
+
         using (var jitest = targetCalc
             .Jitest<Func<int, int, int>>(nameof(CalcBase.Multiply), out var originalMethod)
             .Intercept((Calculator instance, int a, int b) => instance == targetCalc ? 99 : originalMethod.Invoke(a, b)))
         {
-            var targetCC = new CalculatorController(targetCalc);
-            var otherCC = new CalculatorController(otherCalc);
-
             await Assert.That(targetCC.Multiply(3, 4)).IsEqualTo(99);
             await Assert.That(otherCC.Multiply(3, 4)).IsEqualTo(12);
         }
         await Assert.That(targetCalc.Multiply(3, 4)).IsEqualTo(12);
+        await Assert.That(targetCC.Multiply(3, 4)).IsEqualTo(12);
     }
 
     [Test]
@@ -60,12 +61,18 @@ public class IntegrationTests
         var baseInstance = new CalcBase();
         var derivedInstance = new Calculator();
 
+        var baseCC = new CalculatorController(baseInstance);
+        var derivedCC = new CalculatorController(derivedInstance);
+
         // 1) Target: CalcBase, Interceptor Delegate Declaring Parameter: CalcBase
         using (var j1 = baseInstance
             .Jitest<Func<int, int, int>>(nameof(CalcBase.Multiply), out _)
             .Intercept((CalcBase instance, int a, int b) => 100))
         {
             await Assert.That(baseInstance.Multiply(1, 1)).IsEqualTo(100);
+            await Assert.That(derivedInstance.Multiply(1, 1)).IsEqualTo(100);
+            await Assert.That(baseCC.Multiply(1, 1)).IsEqualTo(100);
+            await Assert.That(derivedCC.Multiply(1, 1)).IsEqualTo(100);
         }
 
         // 2) Target: CalcBase, Interceptor Delegate Declaring Parameter: Calculator
@@ -74,6 +81,9 @@ public class IntegrationTests
             .Intercept((Calculator instance, int a, int b) => 200))
         {
             await Assert.That(baseInstance.Multiply(1, 1)).IsEqualTo(200);
+            await Assert.That(derivedInstance.Multiply(1, 1)).IsEqualTo(200);
+            await Assert.That(baseCC.Multiply(1, 1)).IsEqualTo(200);
+            await Assert.That(derivedCC.Multiply(1, 1)).IsEqualTo(200);
         }
 
         // 3) Target: Calculator, Interceptor Delegate Declaring Parameter: CalcBase
@@ -81,7 +91,10 @@ public class IntegrationTests
             .Jitest<Func<int, int, int>>(nameof(CalcBase.Multiply), out _)
             .Intercept((CalcBase instance, int a, int b) => 300))
         {
+            await Assert.That(baseInstance.Multiply(1, 1)).IsEqualTo(300);
             await Assert.That(derivedInstance.Multiply(1, 1)).IsEqualTo(300);
+            await Assert.That(baseCC.Multiply(1, 1)).IsEqualTo(300);
+            await Assert.That(derivedCC.Multiply(1, 1)).IsEqualTo(300);
         }
 
         // 4) Target: Calculator, Interceptor Delegate Declaring Parameter: Calculator
@@ -89,7 +102,10 @@ public class IntegrationTests
             .Jitest<Func<int, int, int>>(nameof(CalcBase.Multiply), out _)
             .Intercept((Calculator instance, int a, int b) => 400))
         {
+            await Assert.That(baseInstance.Multiply(1, 1)).IsEqualTo(400);
             await Assert.That(derivedInstance.Multiply(1, 1)).IsEqualTo(400);
+            await Assert.That(baseCC.Multiply(1, 1)).IsEqualTo(400);
+            await Assert.That(derivedCC.Multiply(1, 1)).IsEqualTo(400);
         }
     }
 
