@@ -71,7 +71,7 @@ public sealed class DetourScope : IDisposable
 
         try
         {
-            // Synchronize hook disposal with HookSentinel to prevent issues during concurrent test execution.
+            // Synchronize hook disposal to make sure uninstall interceptions safe during concurrent test execution.
             lock (HookSentinel)
             {
                 hook.Dispose();
