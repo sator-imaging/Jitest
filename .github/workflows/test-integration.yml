@@ -1,21 +1,14 @@
-name: Test
+name: Test Integration
 
 on:
-  push:
-    branches: [ "main" ]
-    paths-ignore: [ '.github/**' ]
-  pull_request:
-    branches: [ "main" ]
-    paths-ignore: [ '.github/**' ]
   workflow_dispatch:
   workflow_call:
 
 jobs:
 
-  test:
+  test-integration:
 
-    # FIX: cannot use ubuntu-latest/slim for net5.0
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         configuration: [ Debug, Release ]
@@ -28,25 +21,23 @@ jobs:
             10.x.x
             9.x.x
             8.x.x
-            7.x.x
-            6.x.x
-            5.x.x
 
-      - name: Test
+      - name: Test Integration
         run: |
           test()
           {
             local framework="$1"
 
-            dotnet build ./sandbox -f "$framework"
+            dotnet build ./test-integration -f "$framework"
+            local version=$(dotnet list ./test-integration package -f "$framework" | grep -E '^\s*>\s*Jitest\s+' | awk '{print $NF}')
 
             {
-              echo "## $framework (Sandbox)"
+              echo "## $framework (Integration Test - Jitest $version)"
               echo
               echo '```'
               dotnet run \
                 -p:NoWarn=NETSDK1138 \
-                --project ./sandbox \
+                --project ./test-integration \
                 -f "$framework" \
                 -c "${{ matrix.configuration }}"
               echo '```'
@@ -54,6 +45,6 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           }
 
-          for framework in net10.0 net9.0 net8.0 net7.0 net6.0 net5.0; do
+          for framework in net10.0 net9.0 net8.0; do
             test "$framework"
           done

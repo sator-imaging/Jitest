@@ -3,7 +3,7 @@
 
 using Jitest;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
@@ -84,17 +84,14 @@ public class IntegrationTests
     [Test]
     public async Task TestJitestContextScope()
     {
-        var state = new List<bool>();
+        var state = new ConcurrentBag<bool>();
 
         async Task Worker()
         {
             using (JitestContext.BeginTestMethod())
             {
                 await Task.Delay(1000);
-                lock (state)
-                {
-                    state.Add(true);
-                }
+                state.Add(true);
             }
         }
 
@@ -104,21 +101,11 @@ public class IntegrationTests
         await Task.WhenAny(t1, t2);
         await Task.Delay(500);
 
-        int countAfterFirstFinished;
-        lock (state)
-        {
-            countAfterFirstFinished = state.Count;
-        }
-        await Assert.That(countAfterFirstFinished).IsEqualTo(1);
+        await Assert.That(state.Count).IsEqualTo(1);
 
         await Task.WhenAll(t1, t2);
 
-        int countAfterAllFinished;
-        lock (state)
-        {
-            countAfterAllFinished = state.Count;
-        }
-        await Assert.That(countAfterAllFinished).IsEqualTo(2);
+        await Assert.That(state.Count).IsEqualTo(2);
     }
 
     [Test]
