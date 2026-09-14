@@ -84,14 +84,14 @@ public class IntegrationTests
     [Test]
     public async Task TestJitestContextScope()
     {
-        var state = new ConcurrentBag<bool>();
+        var state = new ConcurrentBag<object>();
 
         async Task Worker()
         {
             using (JitestContext.BeginTestMethod())
             {
                 await Task.Delay(1000);
-                state.Add(true);
+                state.Add(new object());
             }
         }
 
