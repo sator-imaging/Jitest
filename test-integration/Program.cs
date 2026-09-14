@@ -3,6 +3,7 @@
 
 using Jitest;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
@@ -83,22 +84,41 @@ public class IntegrationTests
     [Test]
     public async Task TestJitestContextScope()
     {
-        using (var scope1 = JitestContext.BeginTestMethod())
+        var state = new List<bool>();
+
+        async Task Worker()
         {
-            var task = Task.Run(() =>
+            using (JitestContext.BeginTestMethod())
             {
-                using var scope2 = JitestContext.BeginTestMethod();
-                return true;
-            });
-
-            bool completed = task.Wait(100);
-            await Assert.That(completed).IsFalse();
+                await Task.Delay(1000);
+                lock (state)
+                {
+                    state.Add(true);
+                }
+            }
         }
 
-        using (var scope2 = JitestContext.BeginTestMethod())
+        var t1 = Task.Run(Worker);
+        var t2 = Task.Run(Worker);
+
+        await Task.WhenAny(t1, t2);
+        await Task.Delay(500);
+
+        int countAfterFirstFinished;
+        lock (state)
         {
-            await Assert.That(true).IsTrue();
+            countAfterFirstFinished = state.Count;
         }
+        await Assert.That(countAfterFirstFinished).IsEqualTo(1);
+
+        await Task.WhenAll(t1, t2);
+
+        int countAfterAllFinished;
+        lock (state)
+        {
+            countAfterAllFinished = state.Count;
+        }
+        await Assert.That(countAfterAllFinished).IsEqualTo(2);
     }
 
     [Test]
