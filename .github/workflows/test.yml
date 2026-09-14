@@ -45,7 +45,7 @@ jobs:
               echo
               echo '```'
               dotnet run \
-                -p:"NoWarn=\$(NoWarn),NETSDK1138" \
+                -p:NoWarn=NETSDK1138 \
                 --project ./sandbox \
                 -f "$framework" \
                 -c "${{ matrix.configuration }}"
