@@ -20,6 +20,7 @@ using TUnit.Core;
 
 namespace Jitest.IntegrationTest;
 
+[NotInParallel]
 public class IntegrationTests
 {
     [Test]
@@ -51,6 +52,45 @@ public class IntegrationTests
             await Assert.That(otherCC.Multiply(3, 4)).IsEqualTo(12);
         }
         await Assert.That(targetCalc.Multiply(3, 4)).IsEqualTo(12);
+    }
+
+    [Test]
+    public async Task TestInstanceMethodInterceptionCombinations()
+    {
+        var baseInstance = new CalcBase();
+        var derivedInstance = new Calculator();
+
+        // 1) Target: CalcBase, Interceptor Delegate Declaring Parameter: CalcBase
+        using (var j1 = baseInstance
+            .Jitest<Func<int, int, int>>(nameof(CalcBase.Multiply), out _)
+            .Intercept((CalcBase instance, int a, int b) => 100))
+        {
+            await Assert.That(baseInstance.Multiply(1, 1)).IsEqualTo(100);
+        }
+
+        // 2) Target: CalcBase, Interceptor Delegate Declaring Parameter: Calculator
+        using (var j2 = baseInstance
+            .Jitest<Func<int, int, int>>(nameof(CalcBase.Multiply), out _)
+            .Intercept((Calculator instance, int a, int b) => 200))
+        {
+            await Assert.That(baseInstance.Multiply(1, 1)).IsEqualTo(200);
+        }
+
+        // 3) Target: Calculator, Interceptor Delegate Declaring Parameter: CalcBase
+        using (var j3 = derivedInstance
+            .Jitest<Func<int, int, int>>(nameof(CalcBase.Multiply), out _)
+            .Intercept((CalcBase instance, int a, int b) => 300))
+        {
+            await Assert.That(derivedInstance.Multiply(1, 1)).IsEqualTo(300);
+        }
+
+        // 4) Target: Calculator, Interceptor Delegate Declaring Parameter: Calculator
+        using (var j4 = derivedInstance
+            .Jitest<Func<int, int, int>>(nameof(CalcBase.Multiply), out _)
+            .Intercept((Calculator instance, int a, int b) => 400))
+        {
+            await Assert.That(derivedInstance.Multiply(1, 1)).IsEqualTo(400);
+        }
     }
 
 #if NET7_0_OR_GREATER
