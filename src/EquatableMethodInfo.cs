@@ -2,7 +2,6 @@
 // https://github.com/sator-imaging/Jitest
 
 using System;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -13,7 +12,6 @@ namespace Jitest;
 [StructLayout(LayoutKind.Auto)]
 internal readonly struct EquatableMethodInfo : IEquatable<EquatableMethodInfo>
 {
-    // Don't include parameters!! Array hash is not based on its contents!!
     readonly int hashCode;
 
     EquatableMethodInfo(MethodInfo methodInfo)
@@ -24,6 +22,7 @@ internal readonly struct EquatableMethodInfo : IEquatable<EquatableMethodInfo>
         }
 
         this.MethodInfo = methodInfo;
+        // Don't include parameters!! Array hash is not based on its contents!!
         this.hashCode = HashCode.Combine(methodInfo.DeclaringType, methodInfo.Name);
     }
 
@@ -38,9 +37,28 @@ internal readonly struct EquatableMethodInfo : IEquatable<EquatableMethodInfo>
         var info = this.MethodInfo;
         var otherInfo = other.MethodInfo;
 
-        return otherInfo.DeclaringType == info.DeclaringType
-            && otherInfo.Name == info.Name
-            && otherInfo.GetParameters().Select(p => p.ParameterType).SequenceEqual(info.GetParameters().Select(p => p.ParameterType));
+        if (otherInfo.DeclaringType != info.DeclaringType || otherInfo.Name != info.Name)
+        {
+            return false;
+        }
+
+        var params1 = info.GetParameters();
+        var params2 = otherInfo.GetParameters();
+
+        if (params1.Length != params2.Length)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < params1.Length; i++)
+        {
+            if (params1[i].ParameterType != params2[i].ParameterType)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
     public static bool operator ==(EquatableMethodInfo left, EquatableMethodInfo right) => left.Equals(right);
     public static bool operator !=(EquatableMethodInfo left, EquatableMethodInfo right) => !(left == right);
