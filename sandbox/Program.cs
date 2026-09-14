@@ -31,17 +31,6 @@ Console.WriteLine();
 Console.WriteLine($"  2) After dispose:      Calc.Sum(1, 2) = {CalcBase.Sum(1, 2)}   (expected: 3)");
 
 Console.WriteLine();
-Console.WriteLine("--- StaticInterceptor<TTarget, ...> Test ---");
-Console.WriteLine();
-{
-    using var jitest = typeof(CalcBase)
-        .StaticJitest<CalcBase, int, int, int>("SumCore", out Func<int, int, int> _)
-        .Intercept((int a, int b) => 77);
-
-    Console.WriteLine($"  StaticJitest intercept: Calc.Sum(1, 2) = {CalcBase.Sum(1, 2)} (expected: 77)");
-}
-
-Console.WriteLine();
 Console.WriteLine("--- Instance Method (DI: Calc <- CalcController) ---");
 Console.WriteLine();
 var targetCalc = new Calculator();
@@ -58,36 +47,6 @@ var otherCalc = new CalcBase();
     Console.WriteLine($"  4) During intercept, DIFFERENT instance:   otherCC.Multiply(3, 4)    = {otherCC.Multiply(3, 4)}  (expected: 12)");
 }
 Console.WriteLine($"  5) After dispose:                          targetCalc.Multiply(3, 4) = {targetCalc.Multiply(3, 4)}  (expected: 12)");
-
-Console.WriteLine();
-Console.WriteLine("--- InstanceInterceptor<TTarget, ...> Reference Type Test ---");
-Console.WriteLine();
-{
-    using var jitest = targetCalc
-        .InstanceJitest<Calculator, int, int, int>(nameof(CalcBase.Multiply), out Func<int, int, int> _)
-        .Intercept(targetCalc, (int a, int b) => 888);
-
-    var targetCC = new CalculatorController(targetCalc);
-    var otherCC = new CalculatorController(otherCalc);
-
-    Console.WriteLine($"  InstanceJitest target instance:    targetCC.Multiply(3, 4) = {targetCC.Multiply(3, 4)} (expected: 888)");
-    Console.WriteLine($"  InstanceJitest DIFFERENT instance: otherCC.Multiply(3, 4)  = {otherCC.Multiply(3, 4)} (expected: 12)");
-}
-
-Console.WriteLine();
-Console.WriteLine("--- InstanceInterceptor InterceptUnsafe Test ---");
-Console.WriteLine();
-{
-    using var jitest = targetCalc
-        .InstanceJitest<Calculator, int, int, int>(nameof(CalcBase.Multiply), out Func<int, int, int> _)
-        .InterceptUnsafe((int a, int b) => 555);
-
-    var targetCC = new CalculatorController(targetCalc);
-    var otherCC = new CalculatorController(otherCalc);
-
-    Console.WriteLine($"  InterceptUnsafe target instance:    targetCC.Multiply(3, 4) = {targetCC.Multiply(3, 4)} (expected: 555)");
-    Console.WriteLine($"  InterceptUnsafe DIFFERENT instance: otherCC.Multiply(3, 4)  = {otherCC.Multiply(3, 4)} (expected: 555)");
-}
 
 #if NET7_0_OR_GREATER
 
@@ -120,7 +79,20 @@ Console.WriteLine($"  {client.GetAsync("https://yahoo.co.jp/").Result.ToString()
 Console.WriteLine();
 Console.WriteLine("  If every 'expected' value above matched, the whole pipeline is confirmed working.");
 
+#if false
+{
+    using var jitest = 0xFFFF
+        .Jitest<Func<string>>(nameof(object.ToString), out _)  // <-- Expected error on this method
+        .Intercept(static (ref int _) => string.Empty);
+}
+#endif
+
+
 return 0;
+
+
+
+
 
 internal class CalcBase
 {
@@ -134,14 +106,4 @@ internal class Calculator : CalcBase { }
 internal class CalculatorController(CalcBase calculator)
 {
     public int Multiply(int a, int b) => calculator.Multiply(a, b);
-}
-
-internal struct TestStruct
-{
-    public int Value;
-    public int Add(int x)
-    {
-        Value += x;
-        return Value;
-    }
 }
