@@ -13,142 +13,16 @@ Directory.CreateDirectory(instanceDir);
 foreach (string file in Directory.GetFiles(staticDir)) File.Delete(file);
 foreach (string file in Directory.GetFiles(instanceDir)) File.Delete(file);
 
-string header = @"// Licensed under the Apache-2.0 License
-// https://github.com/sator-imaging/Jitest
+string licenseHeader = @"// Licensed under the Apache-2.0 License
+// https://github.com/sator-imaging/Jitest";
+
+string header = $@"{licenseHeader}
 
 using System;
 using System.Reflection;
 
 namespace Jitest;
 ";
-
-string helperCode = @"// Licensed under the Apache-2.0 License
-// https://github.com/sator-imaging/Jitest
-
-using MonoMod.Utils;
-using System;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.Reflection;
-
-namespace Jitest;
-
-internal static class ResolveMethodHelper
-{
-    static readonly ConcurrentDictionary<EquatableMethodInfo, Delegate?> OriginalMethodByMethodInfo = new();
-
-    internal static (MethodInfo, TDelegate?) ResolveMethod<TDelegate>(Type type, string methodName)
-        where TDelegate : class
-    {
-        Type[] parameters;
-        if (typeof(TDelegate) == typeof(Delegate))
-        {
-            parameters = Array.Empty<Type>();
-        }
-        else if (typeof(TDelegate).Name.StartsWith(""Func"", StringComparison.Ordinal))
-        {
-            parameters = typeof(TDelegate).GenericTypeArguments[..^1];
-        }
-        else if (typeof(TDelegate).Name.StartsWith(""Action"", StringComparison.Ordinal))
-        {
-            parameters = typeof(TDelegate).GenericTypeArguments;
-        }
-        else
-        {
-            parameters = Array.Empty<Type>();
-        }
-
-        const BindingFlags AllBindingFlags = (BindingFlags)(~0);
-
-        MethodInfo? method = null;
-        if (parameters.Length > 0 || typeof(TDelegate) != typeof(Delegate))
-        {
-            method = type.GetMethod(methodName, AllBindingFlags, binder: null, parameters, modifiers: null);
-        }
-
-        if (method == null)
-        {
-            var methods = type.GetMethods(AllBindingFlags).Where(m => m.Name == methodName).ToArray();
-            if (methods.Length == 1)
-            {
-                method = methods[0];
-            }
-            else if (methods.Length > 1 && parameters.Length > 0)
-            {
-                method = methods.FirstOrDefault(m => m.GetParameters().Length == parameters.Length);
-            }
-        }
-
-        if (method == null)
-        {
-            var bt = type.BaseType;
-            while (bt != null)
-            {
-                method = bt.GetMethod(methodName, AllBindingFlags, binder: null, parameters, modifiers: null);
-                if (method != null) break;
-                bt = bt.BaseType;
-            }
-        }
-
-        if (method == null)
-        {
-            throw new JitestException(
-                $""Method '{methodName}({string.Join("", "", parameters.Select(static x => x.Name))})' is not found in the type hierarchy of '{type}'"");
-        }
-
-        if (typeof(TDelegate) == typeof(Delegate))
-        {
-            return (method, null);
-        }
-
-        try
-        {
-            var cloneMethod = OriginalMethodByMethodInfo.GetOrAdd(
-                method,
-                static (method) =>
-                {
-                    using var dmd = new DynamicMethodDefinition(method.MethodInfo);
-                    var copy = dmd.Generate();
-
-                    return copy.CreateDelegate(typeof(TDelegate));
-                })
-                as TDelegate;
-
-            return (method, cloneMethod);
-        }
-        catch (ArgumentException)
-        {
-            return (method, null);
-        }
-    }
-
-    internal static (MethodInfo, TOrigDelegate?) ResolveInstanceMethodWithSelf<TTarget, TOrigDelegate>(Type type, string methodName)
-        where TOrigDelegate : class
-    {
-        var (method, _) = ResolveMethod<Delegate>(type, methodName);
-        try
-        {
-            var cloneMethod = OriginalMethodByMethodInfo.GetOrAdd(
-                method,
-                static (method) =>
-                {
-                    using var dmd = new DynamicMethodDefinition(method.MethodInfo);
-                    var copy = dmd.Generate();
-
-                    return copy.CreateDelegate(typeof(TOrigDelegate));
-                })
-                as TOrigDelegate;
-
-            return (method, cloneMethod);
-        }
-        catch (ArgumentException)
-        {
-            return (method, null);
-        }
-    }
-}
-";
-File.WriteAllText(Path.Combine(staticDir, "ResolveMethodHelper.cs"), helperCode);
 
 // Generate StaticInterceptor Extensions container file
 StringBuilder sbStaticExt = new StringBuilder();
@@ -411,7 +285,7 @@ static void AppendStaticExtAction(StringBuilder sb, int n, string className, str
     sb.AppendLine($"    /// <summary>Extension method for static method interceptor.</summary>");
     sb.AppendLine($"    public static {className}<{classTparams}> StaticJitest<{extTparams}>(this Type type, string methodName, out {actUser}? originalMethod)");
     sb.AppendLine("    {");
-    sb.AppendLine($"        var (method, dele) = ResolveMethodHelper.ResolveMethod<{actUser}>(type, methodName);");
+    sb.AppendLine($"        var (method, dele) = Extensions.ResolveMethod<{actUser}>(type, methodName);");
     sb.AppendLine("        originalMethod = dele;");
     sb.AppendLine($"        return new {className}<{classTparams}>(method, dele);");
     sb.AppendLine("    }");
@@ -422,7 +296,7 @@ static void AppendStaticExtFunc(StringBuilder sb, int n, string className, strin
     sb.AppendLine($"    /// <summary>Extension method for static method interceptor.</summary>");
     sb.AppendLine($"    public static {className}<{classTparams}> StaticJitest<{extTparams}>(this Type type, string methodName, out {fnUser}? originalMethod)");
     sb.AppendLine("    {");
-    sb.AppendLine($"        var (method, dele) = ResolveMethodHelper.ResolveMethod<{fnUser}>(type, methodName);");
+    sb.AppendLine($"        var (method, dele) = Extensions.ResolveMethod<{fnUser}>(type, methodName);");
     sb.AppendLine("        originalMethod = dele;");
     sb.AppendLine($"        return new {className}<{classTparams}>(method, dele);");
     sb.AppendLine("    }");
@@ -436,13 +310,13 @@ static void AppendInstanceExtAction(StringBuilder sb, int n, string className, s
     sb.AppendLine("        if (instance == null) throw new ArgumentNullException(nameof(instance));");
     sb.AppendLine("        if (typeof(TTarget).IsValueType)");
     sb.AppendLine("        {");
-    sb.AppendLine($"            var (method, _) = ResolveMethodHelper.ResolveMethod<Delegate>(typeof(TTarget), methodName);");
+    sb.AppendLine($"            var (method, _) = Extensions.ResolveMethod<Delegate>(typeof(TTarget), methodName);");
     sb.AppendLine("            originalMethod = null;");
     sb.AppendLine($"            return new {className}<{classTparams}>(method, null);");
     sb.AppendLine("        }");
     sb.AppendLine("        else");
     sb.AppendLine("        {");
-    sb.AppendLine($"            var (method, dele) = ResolveMethodHelper.ResolveInstanceMethodWithSelf<TTarget, {actInternal}>(typeof(TTarget), methodName);");
+    sb.AppendLine($"            var (method, dele) = Extensions.ResolveMethod<{actInternal}>(typeof(TTarget), methodName);");
     sb.AppendLine("            originalMethod = dele != null ? ({actUser})((object)dele) : null;");
     sb.AppendLine($"            return new {className}<{classTparams}>(method, dele);");
     sb.AppendLine("        }");
@@ -457,13 +331,13 @@ static void AppendInstanceExtFunc(StringBuilder sb, int n, string className, str
     sb.AppendLine("        if (instance == null) throw new ArgumentNullException(nameof(instance));");
     sb.AppendLine("        if (typeof(TTarget).IsValueType)");
     sb.AppendLine("        {");
-    sb.AppendLine($"            var (method, _) = ResolveMethodHelper.ResolveMethod<Delegate>(typeof(TTarget), methodName);");
+    sb.AppendLine($"            var (method, _) = Extensions.ResolveMethod<Delegate>(typeof(TTarget), methodName);");
     sb.AppendLine("            originalMethod = null;");
     sb.AppendLine($"            return new {className}<{classTparams}>(method, null);");
     sb.AppendLine("        }");
     sb.AppendLine("        else");
     sb.AppendLine("        {");
-    sb.AppendLine($"            var (method, dele) = ResolveMethodHelper.ResolveInstanceMethodWithSelf<TTarget, {fnInternal}>(typeof(TTarget), methodName);");
+    sb.AppendLine($"            var (method, dele) = Extensions.ResolveMethod<{fnInternal}>(typeof(TTarget), methodName);");
     sb.AppendLine("            originalMethod = dele != null ? ({fnUser})((object)dele) : null;");
     sb.AppendLine($"            return new {className}<{classTparams}>(method, dele);");
     sb.AppendLine("        }");
