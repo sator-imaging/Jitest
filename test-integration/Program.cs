@@ -93,7 +93,6 @@ public class IntegrationTests
         }
     }
 
-#if NET7_0_OR_GREATER
     [Test]
     public async Task TestStopwatchMethodInterception()
     {
@@ -105,7 +104,6 @@ public class IntegrationTests
             await Assert.That(Stopwatch.GetElapsedTime(123456789)).IsEqualTo(expectedSpan);
         }
     }
-#endif
 
     [Test]
     public async Task TestHttpClientMethodInterception()
