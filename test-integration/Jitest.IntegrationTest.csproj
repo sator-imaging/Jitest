@@ -7,11 +7,10 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);TUnitAssertions0005</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Jitest" Version="0.9.0" />
+    <PackageReference Include="Jitest" Version="*-*" />
     <PackageReference Include="TUnit" Version="1.67.0" />
   </ItemGroup>
 

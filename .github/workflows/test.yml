@@ -52,24 +52,50 @@ jobs:
               echo '```'
               echo
             } >> "$GITHUB_STEP_SUMMARY"
-
-            if [[ "$framework" == "net10.0" || "$framework" == "net9.0" || "$framework" == "net8.0" ]]; then
-              dotnet build ./test-integration -f "$framework"
-              {
-                echo "## $framework (Integration Test)"
-                echo
-                echo '```'
-                dotnet run \
-                  -p:NoWarn=NETSDK1138 \
-                  --project ./test-integration \
-                  -f "$framework" \
-                  -c "${{ matrix.configuration }}"
-                echo '```'
-                echo
-              } >> "$GITHUB_STEP_SUMMARY"
-            fi
           }
 
           for framework in net10.0 net9.0 net8.0 net7.0 net6.0 net5.0; do
+            test "$framework"
+          done
+
+  test-integration:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        configuration: [ Debug, Release ]
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5      # v4.3.1
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4.3.1
+        with:
+          dotnet-version: |
+            10.x.x
+            9.x.x
+            8.x.x
+
+      - name: Test Integration
+        run: |
+          test()
+          {
+            local framework="$1"
+
+            dotnet build ./test-integration -f "$framework"
+
+            {
+              echo "## $framework (Integration Test)"
+              echo
+              echo '```'
+              dotnet run \
+                -p:NoWarn=NETSDK1138 \
+                --project ./test-integration \
+                -f "$framework" \
+                -c "${{ matrix.configuration }}"
+              echo '```'
+              echo
+            } >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          for framework in net10.0 net9.0 net8.0; do
             test "$framework"
           done
