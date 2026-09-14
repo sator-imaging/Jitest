@@ -13,6 +13,9 @@ namespace Jitest;
 [StructLayout(LayoutKind.Auto)]
 internal readonly struct EquatableMethodInfo : IEquatable<EquatableMethodInfo>
 {
+    // Don't include parameters!! Array hash is not based on its contents!!
+    readonly int hashCode;
+
     EquatableMethodInfo(MethodInfo methodInfo)
     {
         if (methodInfo == null)
@@ -21,20 +24,23 @@ internal readonly struct EquatableMethodInfo : IEquatable<EquatableMethodInfo>
         }
 
         this.MethodInfo = methodInfo;
+        this.hashCode = HashCode.Combine(methodInfo.DeclaringType, methodInfo.Name);
     }
 
     public static implicit operator EquatableMethodInfo(MethodInfo info) => new(info);
 
     internal MethodInfo MethodInfo { get; }
 
-    // Don't include parameters!! Array hash is not based on its contents!!
-    public override int GetHashCode() => HashCode.Combine(this.MethodInfo.DeclaringType, this.MethodInfo.Name);
+    public override int GetHashCode() => this.hashCode;
     public override bool Equals(object? obj) => obj is EquatableMethodInfo other && this.Equals(other);
     public bool Equals(EquatableMethodInfo other)
     {
-        return other.MethodInfo.DeclaringType == MethodInfo.DeclaringType
-            && other.MethodInfo.Name == MethodInfo.Name
-            && other.MethodInfo.GetParameters().Select(p => p.ParameterType).SequenceEqual(MethodInfo.GetParameters().Select(p => p.ParameterType));
+        var info = this.MethodInfo;
+        var otherInfo = other.MethodInfo;
+
+        return otherInfo.DeclaringType == info.DeclaringType
+            && otherInfo.Name == info.Name
+            && otherInfo.GetParameters().Select(p => p.ParameterType).SequenceEqual(info.GetParameters().Select(p => p.ParameterType));
     }
     public static bool operator ==(EquatableMethodInfo left, EquatableMethodInfo right) => left.Equals(right);
     public static bool operator !=(EquatableMethodInfo left, EquatableMethodInfo right) => !(left == right);
