@@ -81,9 +81,10 @@ jobs:
             local framework="$1"
 
             dotnet build ./test-integration -f "$framework"
+            local version=$(dotnet list ./test-integration package -f "$framework" | grep -E '^\s*>\s*Jitest\s+' | awk '{print $NF}')
 
             {
-              echo "## $framework (Integration Test)"
+              echo "## $framework (Integration Test - Jitest $version)"
               echo
               echo '```'
               dotnet run \
