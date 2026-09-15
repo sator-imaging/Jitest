@@ -50,15 +50,20 @@ internal readonly struct EquatableMethodInfo : IEquatable<EquatableMethodInfo>
             return false;
         }
 
-        for (int i = 0; i < params1.Length; i++)
-        {
-            if (params1[i].ParameterType != params2[i].ParameterType)
-            {
-                return false;
-            }
-        }
+        return ArrayEquals();
 
-        return true;
+        bool ArrayEquals()
+        {
+            for (int i = 0; i < params1.Length; i++)
+            {
+                if (params1[i].ParameterType != params2[i].ParameterType)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
     public static bool operator ==(EquatableMethodInfo left, EquatableMethodInfo right) => left.Equals(right);
     public static bool operator !=(EquatableMethodInfo left, EquatableMethodInfo right) => !(left == right);
