@@ -50,9 +50,9 @@ internal readonly struct EquatableMethodInfo : IEquatable<EquatableMethodInfo>
             return false;
         }
 
-        return ArrayEquals();
+        return ArrayEquals(params1, params2);
 
-        bool ArrayEquals()
+        static bool ArrayEquals(ParameterInfo[] params1, ParameterInfo[] params2)
         {
             for (int i = 0; i < params1.Length; i++)
             {
