@@ -25,3 +25,15 @@ public sealed class StaticInterceptorFuncT1<TTarget, T1>
         return DetourScope.Create(target, replacement, instance: null);
     }
 }
+
+/// <summary>Extension methods for static interceptors.</summary>
+public static partial class StaticInterceptorExtensions
+{
+    /// <summary>Extension method for static method interceptor.</summary>
+    public static StaticInterceptorFuncT1<TTarget, T1> StaticJitest<TTarget, T1>(this Type type, string methodName, out Func<T1>? originalMethod)
+    {
+        var (method, dele) = Extensions.ResolveMethod<Func<T1>>(type, methodName);
+        originalMethod = dele;
+        return new StaticInterceptorFuncT1<TTarget, T1>(method, dele);
+    }
+}

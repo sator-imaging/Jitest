@@ -38,3 +38,25 @@ public sealed class InstanceInterceptorFuncT7<TTarget, T1, T2, T3, T4, T5, T6, T
         return DetourScope.Create(target, actual, instance: null);
     }
 }
+
+/// <summary>Extension methods for instance interceptors.</summary>
+public static partial class InstanceInterceptorExtensions
+{
+    /// <summary>Extension method for instance method interceptor.</summary>
+    public static InstanceInterceptorFuncT7<TTarget, T1, T2, T3, T4, T5, T6, T7> InstanceJitest<TTarget, T1, T2, T3, T4, T5, T6, T7>(this TTarget instance, string methodName, out Func<T1, T2, T3, T4, T5, T6, T7>? originalMethod)
+    {
+        if (instance == null) throw new ArgumentNullException(nameof(instance));
+        if (typeof(TTarget).IsValueType)
+        {
+            var (method, _) = Extensions.ResolveMethod<Delegate>(typeof(TTarget), methodName);
+            originalMethod = null;
+            return new InstanceInterceptorFuncT7<TTarget, T1, T2, T3, T4, T5, T6, T7>(method, null);
+        }
+        else
+        {
+            var (method, dele) = Extensions.ResolveMethod<Func<TTarget, T1, T2, T3, T4, T5, T6, T7>>(typeof(TTarget), methodName);
+            originalMethod = dele != null ? (Func<T1, T2, T3, T4, T5, T6, T7>)((object)dele) : null;
+            return new InstanceInterceptorFuncT7<TTarget, T1, T2, T3, T4, T5, T6, T7>(method, dele);
+        }
+    }
+}

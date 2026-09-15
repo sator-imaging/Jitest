@@ -38,3 +38,25 @@ public sealed class InstanceInterceptorFuncT1<TTarget, T1>
         return DetourScope.Create(target, actual, instance: null);
     }
 }
+
+/// <summary>Extension methods for instance interceptors.</summary>
+public static partial class InstanceInterceptorExtensions
+{
+    /// <summary>Extension method for instance method interceptor.</summary>
+    public static InstanceInterceptorFuncT1<TTarget, T1> InstanceJitest<TTarget, T1>(this TTarget instance, string methodName, out Func<T1>? originalMethod)
+    {
+        if (instance == null) throw new ArgumentNullException(nameof(instance));
+        if (typeof(TTarget).IsValueType)
+        {
+            var (method, _) = Extensions.ResolveMethod<Delegate>(typeof(TTarget), methodName);
+            originalMethod = null;
+            return new InstanceInterceptorFuncT1<TTarget, T1>(method, null);
+        }
+        else
+        {
+            var (method, dele) = Extensions.ResolveMethod<Func<TTarget, T1>>(typeof(TTarget), methodName);
+            originalMethod = dele != null ? (Func<T1>)((object)dele) : null;
+            return new InstanceInterceptorFuncT1<TTarget, T1>(method, dele);
+        }
+    }
+}
