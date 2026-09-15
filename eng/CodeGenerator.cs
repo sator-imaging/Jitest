@@ -24,14 +24,6 @@ using System.Reflection;
 namespace Jitest;
 ";
 
-// Generate StaticInterceptor Extensions container file
-StringBuilder sbStaticExt = new StringBuilder();
-sbS_ExtHeader(sbStaticExt, header);
-
-// Generate InstanceInterceptor Extensions container file
-StringBuilder sbInstanceExt = new StringBuilder();
-sbI_ExtHeader(sbInstanceExt, header);
-
 for (int n = 0; n <= 16; n++)
 {
     bool hasAction = n <= 15;
@@ -42,9 +34,6 @@ for (int n = 0; n <= 16; n++)
         // Action 0 params
         GenerateStaticAction(staticDir, header, 0, "StaticInterceptorActionT0", "TTarget", "Action", "TTarget", "TTarget");
         GenerateInstanceAction(instanceDir, header, 0, "InstanceInterceptorActionT0", "TTarget", "Action", "TTarget", "TTarget", "Action<TTarget>", "", "");
-
-        AppendStaticExtAction(sbStaticExt, 0, "StaticInterceptorActionT0", "TTarget", "Action", "TTarget", "TTarget");
-        AppendInstanceExtAction(sbInstanceExt, 0, "InstanceInterceptorActionT0", "TTarget", "Action", "TTarget", "TTarget", "Action<TTarget>");
     }
     else if (n <= 15)
     {
@@ -83,12 +72,6 @@ for (int n = 0; n <= 16; n++)
 
         GenerateInstanceAction(instanceDir, header, n, $"InstanceInterceptorActionT{n}", classTparamsAct, actUser, classTparamsAct, classTparamsAct, actInternal, actParamDecl, actInvokeArgs);
         GenerateInstanceFunc(instanceDir, header, n, $"InstanceInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn, fnInternal, fnParamDecl, fnInvokeArgs);
-
-        AppendStaticExtAction(sbStaticExt, n, $"StaticInterceptorActionT{n}", classTparamsAct, actUser, classTparamsAct, classTparamsAct);
-        AppendStaticExtFunc(sbStaticExt, n, $"StaticInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn);
-
-        AppendInstanceExtAction(sbInstanceExt, n, $"InstanceInterceptorActionT{n}", classTparamsAct, actUser, classTparamsAct, classTparamsAct, actInternal);
-        AppendInstanceExtFunc(sbInstanceExt, n, $"InstanceInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn, fnInternal);
     }
     else // n == 16
     {
@@ -111,35 +94,10 @@ for (int n = 0; n <= 16; n++)
 
         GenerateStaticFunc(staticDir, header, n, $"StaticInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn);
         GenerateInstanceFunc(instanceDir, header, n, $"InstanceInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn, fnInternal, fnParamDecl, fnInvokeArgs);
-
-        AppendStaticExtFunc(sbStaticExt, n, $"StaticInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn);
-        AppendInstanceExtFunc(sbInstanceExt, n, $"InstanceInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn, fnInternal);
     }
 }
 
-sbStaticExt.AppendLine("}");
-File.WriteAllText(Path.Combine(staticDir, "StaticInterceptorExtensions.cs"), sbStaticExt.ToString());
-
-sbInstanceExt.AppendLine("}");
-File.WriteAllText(Path.Combine(instanceDir, "InstanceInterceptorExtensions.cs"), sbInstanceExt.ToString());
-
 Console.WriteLine("Code generation completed successfully!");
-
-static void sbS_ExtHeader(StringBuilder sb, string header)
-{
-    sb.AppendLine(header);
-    sb.AppendLine("/// <summary>Extension methods for static interceptors.</summary>");
-    sb.AppendLine("public static partial class StaticInterceptorExtensions");
-    sb.AppendLine("{");
-}
-
-static void sbI_ExtHeader(StringBuilder sb, string header)
-{
-    sb.AppendLine(header);
-    sb.AppendLine("/// <summary>Extension methods for instance interceptors.</summary>");
-    sb.AppendLine("public static partial class InstanceInterceptorExtensions");
-    sb.AppendLine("{");
-}
 
 static void GenerateStaticAction(string dir, string header, int n, string className, string classTparams, string actUser, string extTargs, string extTparams)
 {
@@ -163,6 +121,18 @@ static void GenerateStaticAction(string dir, string header, int n, string classN
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
     sb.AppendLine("        return DetourScope.Create(target, replacement, instance: null);");
+    sb.AppendLine("    }");
+    sb.AppendLine("}");
+    sb.AppendLine();
+    sb.AppendLine("/// <summary>Extension methods for static interceptors.</summary>");
+    sb.AppendLine("public static partial class StaticInterceptorExtensions");
+    sb.AppendLine("{");
+    sb.AppendLine($"    /// <summary>Extension method for static method interceptor.</summary>");
+    sb.AppendLine($"    public static {className}<{classTparams}> StaticJitest<{extTparams}>(this Type type, string methodName, out {actUser}? originalMethod)");
+    sb.AppendLine("    {");
+    sb.AppendLine($"        var (method, dele) = Extensions.ResolveMethod<{actUser}>(type, methodName);");
+    sb.AppendLine("        originalMethod = dele;");
+    sb.AppendLine($"        return new {className}<{classTparams}>(method, dele);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
 
@@ -191,6 +161,18 @@ static void GenerateStaticFunc(string dir, string header, int n, string classNam
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
     sb.AppendLine("        return DetourScope.Create(target, replacement, instance: null);");
+    sb.AppendLine("    }");
+    sb.AppendLine("}");
+    sb.AppendLine();
+    sb.AppendLine("/// <summary>Extension methods for static interceptors.</summary>");
+    sb.AppendLine("public static partial class StaticInterceptorExtensions");
+    sb.AppendLine("{");
+    sb.AppendLine($"    /// <summary>Extension method for static method interceptor.</summary>");
+    sb.AppendLine($"    public static {className}<{classTparams}> StaticJitest<{extTparams}>(this Type type, string methodName, out {fnUser}? originalMethod)");
+    sb.AppendLine("    {");
+    sb.AppendLine($"        var (method, dele) = Extensions.ResolveMethod<{fnUser}>(type, methodName);");
+    sb.AppendLine("        originalMethod = dele;");
+    sb.AppendLine($"        return new {className}<{classTparams}>(method, dele);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
 
@@ -235,6 +217,28 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine("        return DetourScope.Create(target, actual, instance: null);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
+    sb.AppendLine();
+    sb.AppendLine("/// <summary>Extension methods for instance interceptors.</summary>");
+    sb.AppendLine("public static partial class InstanceInterceptorExtensions");
+    sb.AppendLine("{");
+    sb.AppendLine($"    /// <summary>Extension method for instance method interceptor.</summary>");
+    sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {actUser}? originalMethod)");
+    sb.AppendLine("    {");
+    sb.AppendLine("        if (instance == null) throw new ArgumentNullException(nameof(instance));");
+    sb.AppendLine("        if (typeof(TTarget).IsValueType)");
+    sb.AppendLine("        {");
+    sb.AppendLine($"            var (method, _) = Extensions.ResolveMethod<Delegate>(typeof(TTarget), methodName);");
+    sb.AppendLine("            originalMethod = null;");
+    sb.AppendLine($"            return new {className}<{classTparams}>(method, null);");
+    sb.AppendLine("        }");
+    sb.AppendLine("        else");
+    sb.AppendLine("        {");
+    sb.AppendLine($"            var (method, dele) = Extensions.ResolveMethod<{actInternal}>(typeof(TTarget), methodName);");
+    sb.AppendLine("            originalMethod = dele != null ? ({actUser})((object)dele) : null;");
+    sb.AppendLine($"            return new {className}<{classTparams}>(method, dele);");
+    sb.AppendLine("        }");
+    sb.AppendLine("    }");
+    sb.AppendLine("}");
 
     File.WriteAllText(Path.Combine(dir, $"{className}.cs"), sb.ToString());
 }
@@ -276,55 +280,10 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine("        return DetourScope.Create(target, actual, instance: null);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
-
-    File.WriteAllText(Path.Combine(dir, $"{className}.cs"), sb.ToString());
-}
-
-static void AppendStaticExtAction(StringBuilder sb, int n, string className, string classTparams, string actUser, string extTargs, string extTparams)
-{
-    sb.AppendLine($"    /// <summary>Extension method for static method interceptor.</summary>");
-    sb.AppendLine($"    public static {className}<{classTparams}> StaticJitest<{extTparams}>(this Type type, string methodName, out {actUser}? originalMethod)");
-    sb.AppendLine("    {");
-    sb.AppendLine($"        var (method, dele) = Extensions.ResolveMethod<{actUser}>(type, methodName);");
-    sb.AppendLine("        originalMethod = dele;");
-    sb.AppendLine($"        return new {className}<{classTparams}>(method, dele);");
-    sb.AppendLine("    }");
-}
-
-static void AppendStaticExtFunc(StringBuilder sb, int n, string className, string classTparams, string fnUser, string extTargs, string extTparams)
-{
-    sb.AppendLine($"    /// <summary>Extension method for static method interceptor.</summary>");
-    sb.AppendLine($"    public static {className}<{classTparams}> StaticJitest<{extTparams}>(this Type type, string methodName, out {fnUser}? originalMethod)");
-    sb.AppendLine("    {");
-    sb.AppendLine($"        var (method, dele) = Extensions.ResolveMethod<{fnUser}>(type, methodName);");
-    sb.AppendLine("        originalMethod = dele;");
-    sb.AppendLine($"        return new {className}<{classTparams}>(method, dele);");
-    sb.AppendLine("    }");
-}
-
-static void AppendInstanceExtAction(StringBuilder sb, int n, string className, string classTparams, string actUser, string extTargs, string extTparams, string actInternal)
-{
-    sb.AppendLine($"    /// <summary>Extension method for instance method interceptor.</summary>");
-    sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {actUser}? originalMethod)");
-    sb.AppendLine("    {");
-    sb.AppendLine("        if (instance == null) throw new ArgumentNullException(nameof(instance));");
-    sb.AppendLine("        if (typeof(TTarget).IsValueType)");
-    sb.AppendLine("        {");
-    sb.AppendLine($"            var (method, _) = Extensions.ResolveMethod<Delegate>(typeof(TTarget), methodName);");
-    sb.AppendLine("            originalMethod = null;");
-    sb.AppendLine($"            return new {className}<{classTparams}>(method, null);");
-    sb.AppendLine("        }");
-    sb.AppendLine("        else");
-    sb.AppendLine("        {");
-    sb.AppendLine($"            var (method, dele) = Extensions.ResolveMethod<{actInternal}>(typeof(TTarget), methodName);");
-    sb.AppendLine("            originalMethod = dele != null ? ({actUser})((object)dele) : null;");
-    sb.AppendLine($"            return new {className}<{classTparams}>(method, dele);");
-    sb.AppendLine("        }");
-    sb.AppendLine("    }");
-}
-
-static void AppendInstanceExtFunc(StringBuilder sb, int n, string className, string classTparams, string fnUser, string extTargs, string extTparams, string fnInternal)
-{
+    sb.AppendLine();
+    sb.AppendLine("/// <summary>Extension methods for instance interceptors.</summary>");
+    sb.AppendLine("public static partial class InstanceInterceptorExtensions");
+    sb.AppendLine("{");
     sb.AppendLine($"    /// <summary>Extension method for instance method interceptor.</summary>");
     sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {fnUser}? originalMethod)");
     sb.AppendLine("    {");
@@ -342,4 +301,7 @@ static void AppendInstanceExtFunc(StringBuilder sb, int n, string className, str
     sb.AppendLine($"            return new {className}<{classTparams}>(method, dele);");
     sb.AppendLine("        }");
     sb.AppendLine("    }");
+    sb.AppendLine("}");
+
+    File.WriteAllText(Path.Combine(dir, $"{className}.cs"), sb.ToString());
 }
