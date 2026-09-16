@@ -1,7 +1,16 @@
+// Licensed under the Apache-2.0 License
+// https://github.com/sator-imaging/Jitest
+
+#:property LangVersion=latest
+#:property TargetFramework=net10.0
+#:property PublishAot=false
+
 using System;
 using System.IO;
 using System.Text;
 using System.Web;
+
+const string FileExtension = ".g.cs";
 
 string rootDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, ".."));
 string staticDir = Path.Combine(rootDir, "src", "StaticIntercepter");
@@ -136,7 +145,7 @@ static void GenerateStaticAction(string dir, string header, int n, string classN
     sb.AppendLine("    }");
     sb.AppendLine("}");
 
-    File.WriteAllText(Path.Combine(dir, $"{className}.cs"), sb.ToString());
+    File.WriteAllText(Path.Combine(dir, $"{className}{FileExtension}"), sb.ToString());
 }
 
 static void GenerateStaticFunc(string dir, string header, int n, string className, string classTparams, string fnUser, string extTargs, string extTparams)
@@ -176,7 +185,7 @@ static void GenerateStaticFunc(string dir, string header, int n, string classNam
     sb.AppendLine("    }");
     sb.AppendLine("}");
 
-    File.WriteAllText(Path.Combine(dir, $"{className}.cs"), sb.ToString());
+    File.WriteAllText(Path.Combine(dir, $"{className}{FileExtension}"), sb.ToString());
 }
 
 static void GenerateInstanceAction(string dir, string header, int n, string className, string classTparams, string actUser, string extTargs, string extTparams, string actInternal, string actParamDecl, string actInvokeArgs)
@@ -240,7 +249,7 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine("    }");
     sb.AppendLine("}");
 
-    File.WriteAllText(Path.Combine(dir, $"{className}.cs"), sb.ToString());
+    File.WriteAllText(Path.Combine(dir, $"{className}{FileExtension}"), sb.ToString());
 }
 
 static void GenerateInstanceFunc(string dir, string header, int n, string className, string classTparams, string fnUser, string extTargs, string extTparams, string fnInternal, string fnParamDecl, string fnInvokeArgs)
@@ -303,5 +312,5 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine("    }");
     sb.AppendLine("}");
 
-    File.WriteAllText(Path.Combine(dir, $"{className}.cs"), sb.ToString());
+    File.WriteAllText(Path.Combine(dir, $"{className}{FileExtension}"), sb.ToString());
 }
