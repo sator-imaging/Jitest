@@ -7,7 +7,6 @@ obj
 !sandbox
 !src
 !eng
-!test-integration
 
 !.gitignore
 !Directory.Build.props
