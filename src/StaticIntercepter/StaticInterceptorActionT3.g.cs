@@ -1,6 +1,8 @@
 // Licensed under the Apache-2.0 License
 // https://github.com/sator-imaging/Jitest
 
+#nullable enable
+
 using System;
 using System.Reflection;
 
@@ -9,20 +11,18 @@ namespace Jitest;
 /// <summary>Static method interceptor for <see cref="Action&lt;T1, T2, T3&gt;"/>.</summary>
 public sealed class StaticInterceptorActionT3<TTarget, T1, T2, T3>
 {
-    readonly MethodInfo target;
-    readonly Delegate? originalMethod;
+    readonly Interceptor interceptor;
 
-    internal StaticInterceptorActionT3(MethodInfo target, Delegate? originalMethod)
+    internal StaticInterceptorActionT3(Interceptor interceptor)
     {
-        this.target = target ?? throw new ArgumentNullException(nameof(target));
-        this.originalMethod = originalMethod;
+        this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
     }
 
     /// <summary>Intercepts static method for <see cref="Action&lt;T1, T2, T3&gt;"/>.</summary>
     public DetourScope Intercept(Action<T1, T2, T3> replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        return DetourScope.Create(target, replacement, instance: null);
+        return interceptor.Intercept(replacement);
     }
 }
 
@@ -32,8 +32,8 @@ public static partial class StaticInterceptorExtensions
     /// <summary>Extension method for static method interceptor.</summary>
     public static StaticInterceptorActionT3<TTarget, T1, T2, T3> StaticJitest<TTarget, T1, T2, T3>(this Type type, string methodName, out Action<T1, T2, T3>? originalMethod)
     {
-        var (method, dele) = Extensions.ResolveMethod<Action<T1, T2, T3>>(type, methodName);
-        originalMethod = dele;
-        return new StaticInterceptorActionT3<TTarget, T1, T2, T3>(method, dele);
+        if (type == null) throw new ArgumentNullException(nameof(type));
+        var interceptor = type.Jitest<Action<T1, T2, T3>>(methodName, out originalMethod);
+        return new StaticInterceptorActionT3<TTarget, T1, T2, T3>(interceptor);
     }
 }
