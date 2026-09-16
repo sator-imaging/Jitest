@@ -12,7 +12,7 @@ using System.Web;
 
 const string FileExtension = ".g.cs";
 
-string rootDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, ".."));
+string rootDir = Directory.GetCurrentDirectory();
 string staticDir = Path.Combine(rootDir, "src", "StaticIntercepter");
 string instanceDir = Path.Combine(rootDir, "src", "InstanceIntercepter");
 
@@ -26,6 +26,8 @@ string licenseHeader = @"// Licensed under the Apache-2.0 License
 // https://github.com/sator-imaging/Jitest";
 
 string header = $@"{licenseHeader}
+
+#nullable enable
 
 using System;
 using System.Reflection;
@@ -116,20 +118,18 @@ static void GenerateStaticAction(string dir, string header, int n, string classN
     sb.AppendLine($"/// <summary>Static method interceptor for <see cref=\"{actUserXml}\"/>.</summary>");
     sb.AppendLine($"public sealed class {className}<{classTparams}>");
     sb.AppendLine("{");
-    sb.AppendLine("    readonly MethodInfo target;");
-    sb.AppendLine("    readonly Delegate? originalMethod;");
+    sb.AppendLine("    readonly Interceptor interceptor;");
     sb.AppendLine();
-    sb.AppendLine($"    internal {className}(MethodInfo target, Delegate? originalMethod)");
+    sb.AppendLine($"    internal {className}(Interceptor interceptor)");
     sb.AppendLine("    {");
-    sb.AppendLine("        this.target = target ?? throw new ArgumentNullException(nameof(target));");
-    sb.AppendLine("        this.originalMethod = originalMethod;");
+    sb.AppendLine("        this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));");
     sb.AppendLine("    }");
     sb.AppendLine();
     sb.AppendLine($"    /// <summary>Intercepts static method for <see cref=\"{actUserXml}\"/>.</summary>");
     sb.AppendLine($"    public DetourScope Intercept({actUser} replacement)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
-    sb.AppendLine("        return DetourScope.Create(target, replacement, instance: null);");
+    sb.AppendLine("        return interceptor.Intercept(replacement);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
     sb.AppendLine();
@@ -139,9 +139,9 @@ static void GenerateStaticAction(string dir, string header, int n, string classN
     sb.AppendLine($"    /// <summary>Extension method for static method interceptor.</summary>");
     sb.AppendLine($"    public static {className}<{classTparams}> StaticJitest<{extTparams}>(this Type type, string methodName, out {actUser}? originalMethod)");
     sb.AppendLine("    {");
-    sb.AppendLine($"        var (method, dele) = Extensions.ResolveMethod<{actUser}>(type, methodName);");
-    sb.AppendLine("        originalMethod = dele;");
-    sb.AppendLine($"        return new {className}<{classTparams}>(method, dele);");
+    sb.AppendLine("        if (type == null) throw new ArgumentNullException(nameof(type));");
+    sb.AppendLine($"        var interceptor = type.Jitest<{actUser}>(methodName, out originalMethod);");
+    sb.AppendLine($"        return new {className}<{classTparams}>(interceptor);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
 
@@ -156,20 +156,18 @@ static void GenerateStaticFunc(string dir, string header, int n, string classNam
     sb.AppendLine($"/// <summary>Static method interceptor for <see cref=\"{fnUserXml}\"/>.</summary>");
     sb.AppendLine($"public sealed class {className}<{classTparams}>");
     sb.AppendLine("{");
-    sb.AppendLine("    readonly MethodInfo target;");
-    sb.AppendLine("    readonly Delegate? originalMethod;");
+    sb.AppendLine("    readonly Interceptor interceptor;");
     sb.AppendLine();
-    sb.AppendLine($"    internal {className}(MethodInfo target, Delegate? originalMethod)");
+    sb.AppendLine($"    internal {className}(Interceptor interceptor)");
     sb.AppendLine("    {");
-    sb.AppendLine("        this.target = target ?? throw new ArgumentNullException(nameof(target));");
-    sb.AppendLine("        this.originalMethod = originalMethod;");
+    sb.AppendLine("        this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));");
     sb.AppendLine("    }");
     sb.AppendLine();
     sb.AppendLine($"    /// <summary>Intercepts static method for <see cref=\"{fnUserXml}\"/>.</summary>");
     sb.AppendLine($"    public DetourScope Intercept({fnUser} replacement)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
-    sb.AppendLine("        return DetourScope.Create(target, replacement, instance: null);");
+    sb.AppendLine("        return interceptor.Intercept(replacement);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
     sb.AppendLine();
@@ -179,9 +177,9 @@ static void GenerateStaticFunc(string dir, string header, int n, string classNam
     sb.AppendLine($"    /// <summary>Extension method for static method interceptor.</summary>");
     sb.AppendLine($"    public static {className}<{classTparams}> StaticJitest<{extTparams}>(this Type type, string methodName, out {fnUser}? originalMethod)");
     sb.AppendLine("    {");
-    sb.AppendLine($"        var (method, dele) = Extensions.ResolveMethod<{fnUser}>(type, methodName);");
-    sb.AppendLine("        originalMethod = dele;");
-    sb.AppendLine($"        return new {className}<{classTparams}>(method, dele);");
+    sb.AppendLine("        if (type == null) throw new ArgumentNullException(nameof(type));");
+    sb.AppendLine($"        var interceptor = type.Jitest<{fnUser}>(methodName, out originalMethod);");
+    sb.AppendLine($"        return new {className}<{classTparams}>(interceptor);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
 
@@ -196,12 +194,12 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine($"/// <summary>Instance method interceptor for <see cref=\"{actUserXml}\"/>.</summary>");
     sb.AppendLine($"public sealed class {className}<{classTparams}>");
     sb.AppendLine("{");
-    sb.AppendLine("    readonly MethodInfo target;");
-    sb.AppendLine("    readonly Delegate? originalMethod;");
+    sb.AppendLine("    readonly Interceptor interceptor;");
+    sb.AppendLine($"    readonly {actUser}? originalMethod;");
     sb.AppendLine();
-    sb.AppendLine($"    internal {className}(MethodInfo target, Delegate? originalMethod)");
+    sb.AppendLine($"    internal {className}(Interceptor interceptor, {actUser}? originalMethod)");
     sb.AppendLine("    {");
-    sb.AppendLine("        this.target = target ?? throw new ArgumentNullException(nameof(target));");
+    sb.AppendLine("        this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));");
     sb.AppendLine("        this.originalMethod = originalMethod;");
     sb.AppendLine("    }");
     sb.AppendLine();
@@ -209,13 +207,12 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine($"    public DetourScope Intercept(TTarget instance, {actUser} replacement)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
-    sb.AppendLine($"        var orig = originalMethod != null ? ({actInternal})(object)originalMethod : null;");
     sb.AppendLine($"        {actInternal} actual = (TTarget self{actParamDecl}) =>");
     sb.AppendLine("        {");
     sb.AppendLine($"            if (object.ReferenceEquals(self, instance)) replacement.Invoke({actInvokeArgs});");
-    sb.AppendLine($"            else orig?.Invoke(self{(string.IsNullOrEmpty(actInvokeArgs) ? "" : ", " + actInvokeArgs)});");
+    sb.AppendLine($"            else originalMethod?.Invoke({actInvokeArgs});");
     sb.AppendLine("        };");
-    sb.AppendLine("        return DetourScope.Create(target, actual, instance);");
+    sb.AppendLine("        return interceptor.Intercept(actual);");
     sb.AppendLine("    }");
     sb.AppendLine();
     sb.AppendLine($"    /// <summary>Intercepts instance method across all instances with <see cref=\"{actUserXml}\"/>.</summary>");
@@ -223,7 +220,7 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
     sb.AppendLine($"        {actInternal} actual = (TTarget self{actParamDecl}) => replacement.Invoke({actInvokeArgs});");
-    sb.AppendLine("        return DetourScope.Create(target, actual, instance: null);");
+    sb.AppendLine("        return interceptor.Intercept(actual);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
     sb.AppendLine();
@@ -234,18 +231,8 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {actUser}? originalMethod)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (instance == null) throw new ArgumentNullException(nameof(instance));");
-    sb.AppendLine("        if (typeof(TTarget).IsValueType)");
-    sb.AppendLine("        {");
-    sb.AppendLine($"            var (method, _) = Extensions.ResolveMethod<Delegate>(typeof(TTarget), methodName);");
-    sb.AppendLine("            originalMethod = null;");
-    sb.AppendLine($"            return new {className}<{classTparams}>(method, null);");
-    sb.AppendLine("        }");
-    sb.AppendLine("        else");
-    sb.AppendLine("        {");
-    sb.AppendLine($"            var (method, dele) = Extensions.ResolveMethod<{actInternal}>(typeof(TTarget), methodName);");
-    sb.AppendLine("            originalMethod = dele != null ? ({actUser})((object)dele) : null;");
-    sb.AppendLine($"            return new {className}<{classTparams}>(method, dele);");
-    sb.AppendLine("        }");
+    sb.AppendLine($"        var interceptor = instance.Jitest<{actUser}>(methodName, out originalMethod);");
+    sb.AppendLine($"        return new {className}<{classTparams}>(interceptor, originalMethod);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
 
@@ -260,12 +247,12 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine($"/// <summary>Instance method interceptor for <see cref=\"{fnUserXml}\"/>.</summary>");
     sb.AppendLine($"public sealed class {className}<{classTparams}>");
     sb.AppendLine("{");
-    sb.AppendLine("    readonly MethodInfo target;");
-    sb.AppendLine("    readonly Delegate? originalMethod;");
+    sb.AppendLine("    readonly Interceptor interceptor;");
+    sb.AppendLine($"    readonly {fnUser}? originalMethod;");
     sb.AppendLine();
-    sb.AppendLine($"    internal {className}(MethodInfo target, Delegate? originalMethod)");
+    sb.AppendLine($"    internal {className}(Interceptor interceptor, {fnUser}? originalMethod)");
     sb.AppendLine("    {");
-    sb.AppendLine("        this.target = target ?? throw new ArgumentNullException(nameof(target));");
+    sb.AppendLine("        this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));");
     sb.AppendLine("        this.originalMethod = originalMethod;");
     sb.AppendLine("    }");
     sb.AppendLine();
@@ -273,12 +260,11 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine($"    public DetourScope Intercept(TTarget instance, {fnUser} replacement)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
-    sb.AppendLine($"        var orig = originalMethod != null ? ({fnInternal})(object)originalMethod : null;");
     sb.AppendLine($"        {fnInternal} actual = (TTarget self{fnParamDecl}) =>");
     sb.AppendLine("            object.ReferenceEquals(self, instance)");
     sb.AppendLine($"                ? replacement.Invoke({fnInvokeArgs})");
-    sb.AppendLine($"                : (orig != null ? orig.Invoke(self{(string.IsNullOrEmpty(fnInvokeArgs) ? "" : ", " + fnInvokeArgs)}) : default!);");
-    sb.AppendLine("        return DetourScope.Create(target, actual, instance);");
+    sb.AppendLine($"                : (originalMethod != null ? originalMethod.Invoke({fnInvokeArgs}) : default!);");
+    sb.AppendLine("        return interceptor.Intercept(actual);");
     sb.AppendLine("    }");
     sb.AppendLine();
     sb.AppendLine($"    /// <summary>Intercepts instance method across all instances with <see cref=\"{fnUserXml}\"/>.</summary>");
@@ -286,7 +272,7 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
     sb.AppendLine($"        {fnInternal} actual = (TTarget self{fnParamDecl}) => replacement.Invoke({fnInvokeArgs});");
-    sb.AppendLine("        return DetourScope.Create(target, actual, instance: null);");
+    sb.AppendLine("        return interceptor.Intercept(actual);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
     sb.AppendLine();
@@ -297,18 +283,8 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {fnUser}? originalMethod)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (instance == null) throw new ArgumentNullException(nameof(instance));");
-    sb.AppendLine("        if (typeof(TTarget).IsValueType)");
-    sb.AppendLine("        {");
-    sb.AppendLine($"            var (method, _) = Extensions.ResolveMethod<Delegate>(typeof(TTarget), methodName);");
-    sb.AppendLine("            originalMethod = null;");
-    sb.AppendLine($"            return new {className}<{classTparams}>(method, null);");
-    sb.AppendLine("        }");
-    sb.AppendLine("        else");
-    sb.AppendLine("        {");
-    sb.AppendLine($"            var (method, dele) = Extensions.ResolveMethod<{fnInternal}>(typeof(TTarget), methodName);");
-    sb.AppendLine("            originalMethod = dele != null ? ({fnUser})((object)dele) : null;");
-    sb.AppendLine($"            return new {className}<{classTparams}>(method, dele);");
-    sb.AppendLine("        }");
+    sb.AppendLine($"        var interceptor = instance.Jitest<{fnUser}>(methodName, out originalMethod);");
+    sb.AppendLine($"        return new {className}<{classTparams}>(interceptor, originalMethod);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
 
