@@ -13,12 +13,12 @@ namespace Jitest;
 public sealed class InstanceInterceptorActionT6<TTarget, T1, T2, T3, T4, T5, T6>
 {
     readonly Interceptor interceptor;
-    readonly Action<T1, T2, T3, T4, T5, T6> originalMethod;
+    readonly Action<TTarget, T1, T2, T3, T4, T5, T6> originalMethodInternal;
 
-    internal InstanceInterceptorActionT6(Interceptor interceptor, Action<T1, T2, T3, T4, T5, T6> originalMethod)
+    internal InstanceInterceptorActionT6(Interceptor interceptor, Action<TTarget, T1, T2, T3, T4, T5, T6> originalMethodInternal)
     {
         this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
-        this.originalMethod = originalMethod;
+        this.originalMethodInternal = originalMethodInternal;
     }
 
     /// <summary>Intercepts instance method for specific instance with <see cref="Action&lt;T1, T2, T3, T4, T5, T6&gt;"/>.</summary>
@@ -30,7 +30,7 @@ public sealed class InstanceInterceptorActionT6<TTarget, T1, T2, T3, T4, T5, T6>
             if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))
                 replacement.Invoke(t1, t2, t3, t4, t5, t6);
             else
-                originalMethod.Invoke(t1, t2, t3, t4, t5, t6);
+                originalMethodInternal.Invoke(self, t1, t2, t3, t4, t5, t6);
         };
         return interceptor.Intercept(actual);
     }
@@ -51,7 +51,8 @@ public static partial class InstanceInterceptorExtensions
     public static InstanceInterceptorActionT6<TTarget, T1, T2, T3, T4, T5, T6> InstanceJitest<TTarget, T1, T2, T3, T4, T5, T6>(this TTarget instance, string methodName, out Action<T1, T2, T3, T4, T5, T6> originalMethod)
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
-        var interceptor = instance.Jitest<Action<T1, T2, T3, T4, T5, T6>>(methodName, out originalMethod);
-        return new InstanceInterceptorActionT6<TTarget, T1, T2, T3, T4, T5, T6>(interceptor, originalMethod);
+        var interceptor = instance.Jitest<Action<TTarget, T1, T2, T3, T4, T5, T6>>(methodName, out var originalMethodInternal);
+        originalMethod = (t1, t2, t3, t4, t5, t6) => originalMethodInternal.Invoke(instance, t1, t2, t3, t4, t5, t6);
+        return new InstanceInterceptorActionT6<TTarget, T1, T2, T3, T4, T5, T6>(interceptor, originalMethodInternal);
     }
 }

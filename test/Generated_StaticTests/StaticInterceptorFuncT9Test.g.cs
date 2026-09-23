@@ -1,0 +1,36 @@
+// Licensed under the Apache-2.0 License
+// https://github.com/sator-imaging/Jitest
+
+#nullable enable
+
+using Jitest;
+using System;
+using System.Threading.Tasks;
+using TUnit.Assertions;
+using TUnit.Assertions.Extensions;
+using TUnit.Core;
+
+namespace Jitest.Test;
+
+[NotInParallel]
+public class StaticInterceptorFuncT9Test
+{
+    [Test]
+    public async Task TestFunc9()
+    {
+        var originalVal = StaticTestTargets.Func9(1, 2, 3, 4, 5, 6, 7, 8);
+        var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int, int, int, int, int, int, int, int, int>("Func9", out Func<int, int, int, int, int, int, int, int, int> originalMethod);
+
+        using (interceptor.Intercept((t1, t2, t3, t4, t5, t6, t7, t8) => 9999))
+        {
+            var res = StaticTestTargets.Func9(1, 2, 3, 4, 5, 6, 7, 8);
+            await Assert.That(res).IsEqualTo(9999);
+
+            var origRes = originalMethod.Invoke(1, 2, 3, 4, 5, 6, 7, 8);
+            await Assert.That(origRes).IsEqualTo(originalVal);
+        }
+
+        var afterRes = StaticTestTargets.Func9(1, 2, 3, 4, 5, 6, 7, 8);
+        await Assert.That(afterRes).IsEqualTo(originalVal);
+    }
+}

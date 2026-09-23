@@ -36,11 +36,12 @@ jobs:
             5.x.x
 
       - run: dotnet run eng/CodeGenerator.cs
+      - run: dotnet run eng/TestGenerator.cs
 
       - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
         if: github.ref == 'refs/heads/main' && matrix.configuration == 'Debug'
         with:
-          title: "[bot] dotnet run `eng/CodeGenerator.cs`"
+          title: "[bot] dotnet run `eng/CodeGenerator.cs` and `eng/TestGenerator.cs`"
           branch: "bot/eng-code-generator"
 
       - name: Test
@@ -50,6 +51,7 @@ jobs:
             local framework="$1"
 
             dotnet build ./sandbox -f "$framework"
+            dotnet build ./test -f "$framework"
 
             {
               echo "## $framework (Sandbox)"
@@ -59,6 +61,16 @@ jobs:
               dotnet run \
                 -p:NoWarn="%24(NoWarn)%3BNETSDK1138" \
                 --project ./sandbox \
+                -f "$framework" \
+                -c "${{ matrix.configuration }}"
+              echo '```'
+              echo
+              echo "## $framework (Test)"
+              echo
+              echo '```'
+              dotnet run \
+                -p:NoWarn="%24(NoWarn)%3BNETSDK1138" \
+                --project ./test \
                 -f "$framework" \
                 -c "${{ matrix.configuration }}"
               echo '```'

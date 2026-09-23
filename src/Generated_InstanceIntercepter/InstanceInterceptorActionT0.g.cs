@@ -13,12 +13,12 @@ namespace Jitest;
 public sealed class InstanceInterceptorActionT0<TTarget>
 {
     readonly Interceptor interceptor;
-    readonly Action originalMethod;
+    readonly Action<TTarget> originalMethodInternal;
 
-    internal InstanceInterceptorActionT0(Interceptor interceptor, Action originalMethod)
+    internal InstanceInterceptorActionT0(Interceptor interceptor, Action<TTarget> originalMethodInternal)
     {
         this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
-        this.originalMethod = originalMethod;
+        this.originalMethodInternal = originalMethodInternal;
     }
 
     /// <summary>Intercepts instance method for specific instance with <see cref="Action"/>.</summary>
@@ -30,7 +30,7 @@ public sealed class InstanceInterceptorActionT0<TTarget>
             if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))
                 replacement.Invoke();
             else
-                originalMethod.Invoke();
+                originalMethodInternal.Invoke(self);
         };
         return interceptor.Intercept(actual);
     }
@@ -51,7 +51,8 @@ public static partial class InstanceInterceptorExtensions
     public static InstanceInterceptorActionT0<TTarget> InstanceJitest<TTarget>(this TTarget instance, string methodName, out Action originalMethod)
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
-        var interceptor = instance.Jitest<Action>(methodName, out originalMethod);
-        return new InstanceInterceptorActionT0<TTarget>(interceptor, originalMethod);
+        var interceptor = instance.Jitest<Action<TTarget>>(methodName, out var originalMethodInternal);
+        originalMethod = () => originalMethodInternal.Invoke(instance);
+        return new InstanceInterceptorActionT0<TTarget>(interceptor, originalMethodInternal);
     }
 }

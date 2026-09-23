@@ -13,12 +13,12 @@ namespace Jitest;
 public sealed class InstanceInterceptorActionT2<TTarget, T1, T2>
 {
     readonly Interceptor interceptor;
-    readonly Action<T1, T2> originalMethod;
+    readonly Action<TTarget, T1, T2> originalMethodInternal;
 
-    internal InstanceInterceptorActionT2(Interceptor interceptor, Action<T1, T2> originalMethod)
+    internal InstanceInterceptorActionT2(Interceptor interceptor, Action<TTarget, T1, T2> originalMethodInternal)
     {
         this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
-        this.originalMethod = originalMethod;
+        this.originalMethodInternal = originalMethodInternal;
     }
 
     /// <summary>Intercepts instance method for specific instance with <see cref="Action&lt;T1, T2&gt;"/>.</summary>
@@ -30,7 +30,7 @@ public sealed class InstanceInterceptorActionT2<TTarget, T1, T2>
             if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))
                 replacement.Invoke(t1, t2);
             else
-                originalMethod.Invoke(t1, t2);
+                originalMethodInternal.Invoke(self, t1, t2);
         };
         return interceptor.Intercept(actual);
     }
@@ -51,7 +51,8 @@ public static partial class InstanceInterceptorExtensions
     public static InstanceInterceptorActionT2<TTarget, T1, T2> InstanceJitest<TTarget, T1, T2>(this TTarget instance, string methodName, out Action<T1, T2> originalMethod)
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
-        var interceptor = instance.Jitest<Action<T1, T2>>(methodName, out originalMethod);
-        return new InstanceInterceptorActionT2<TTarget, T1, T2>(interceptor, originalMethod);
+        var interceptor = instance.Jitest<Action<TTarget, T1, T2>>(methodName, out var originalMethodInternal);
+        originalMethod = (t1, t2) => originalMethodInternal.Invoke(instance, t1, t2);
+        return new InstanceInterceptorActionT2<TTarget, T1, T2>(interceptor, originalMethodInternal);
     }
 }
