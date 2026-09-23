@@ -207,7 +207,7 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine($"    public DetourScope Intercept(TTarget instance, {actUser} replacement)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
-    sb.AppendLine($"        {actInternal} actual = (TTarget self{actParamDecl}) =>");
+    sb.AppendLine($"        var actual = (TTarget self{actParamDecl}) =>");
     sb.AppendLine("        {");
     sb.AppendLine($"            if (object.ReferenceEquals(self, instance)) replacement.Invoke({actInvokeArgs});");
     sb.AppendLine($"            else originalMethod?.Invoke({actInvokeArgs});");
@@ -219,7 +219,7 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine($"    public DetourScope InterceptUnsafe({actUser} replacement)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
-    sb.AppendLine($"        {actInternal} actual = (TTarget self{actParamDecl}) => replacement.Invoke({actInvokeArgs});");
+    sb.AppendLine($"        var actual = (TTarget self{actParamDecl}) => replacement.Invoke({actInvokeArgs});");
     sb.AppendLine("        return interceptor.Intercept(actual);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
@@ -260,7 +260,7 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine($"    public DetourScope Intercept(TTarget instance, {fnUser} replacement)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
-    sb.AppendLine($"        {fnInternal} actual = (TTarget self{fnParamDecl}) =>");
+    sb.AppendLine($"        var actual = (TTarget self{fnParamDecl}) =>");
     sb.AppendLine("            object.ReferenceEquals(self, instance)");
     sb.AppendLine($"                ? replacement.Invoke({fnInvokeArgs})");
     sb.AppendLine($"                : (originalMethod != null ? originalMethod.Invoke({fnInvokeArgs}) : default!);");
@@ -271,7 +271,7 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine($"    public DetourScope InterceptUnsafe({fnUser} replacement)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
-    sb.AppendLine($"        {fnInternal} actual = (TTarget self{fnParamDecl}) => replacement.Invoke({fnInvokeArgs});");
+    sb.AppendLine($"        var actual = (TTarget self{fnParamDecl}) => replacement.Invoke({fnInvokeArgs});");
     sb.AppendLine("        return interceptor.Intercept(actual);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
