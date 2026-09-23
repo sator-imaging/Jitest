@@ -13,8 +13,8 @@ using System.Web;
 const string FileExtension = ".g.cs";
 
 string rootDir = Directory.GetCurrentDirectory();
-string staticDir = Path.Combine(rootDir, "src", "StaticIntercepter");
-string instanceDir = Path.Combine(rootDir, "src", "InstanceIntercepter");
+string staticDir = Path.Combine(rootDir, "src", "Generated_StaticIntercepter");
+string instanceDir = Path.Combine(rootDir, "src", "Generated_InstanceIntercepter");
 
 Directory.CreateDirectory(staticDir);
 Directory.CreateDirectory(instanceDir);
