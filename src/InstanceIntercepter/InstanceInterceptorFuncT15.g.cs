@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Jitest;
@@ -14,7 +15,7 @@ public sealed class InstanceInterceptorFuncT15<TTarget, T1, T2, T3, T4, T5, T6, 
     readonly Interceptor interceptor;
     readonly Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>? originalMethod;
 
-    internal InstanceInterceptorFuncT15(Interceptor interceptor, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>? originalMethod)
+    internal InstanceInterceptorFuncT15(Interceptor interceptor, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> originalMethod)
     {
         this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
         this.originalMethod = originalMethod;
@@ -24,10 +25,10 @@ public sealed class InstanceInterceptorFuncT15<TTarget, T1, T2, T3, T4, T5, T6, 
     public DetourScope Intercept(TTarget instance, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        Func<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> actual = (TTarget self, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, T11 t11, T12 t12, T13 t13, T14 t14) =>
-            object.ReferenceEquals(self, instance)
+        var actual = (TTarget self, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, T11 t11, T12 t12, T13 t13, T14 t14) =>
+            (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))
                 ? replacement.Invoke(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14)
-                : (originalMethod != null ? originalMethod.Invoke(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14) : default!);
+                : originalMethod.Invoke(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14);
         return interceptor.Intercept(actual);
     }
 
@@ -35,7 +36,7 @@ public sealed class InstanceInterceptorFuncT15<TTarget, T1, T2, T3, T4, T5, T6, 
     public DetourScope InterceptUnsafe(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        Func<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> actual = (TTarget self, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, T11 t11, T12 t12, T13 t13, T14 t14) => replacement.Invoke(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14);
+        var actual = (TTarget self, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, T11 t11, T12 t12, T13 t13, T14 t14) => replacement.Invoke(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14);
         return interceptor.Intercept(actual);
     }
 }

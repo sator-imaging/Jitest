@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Jitest;
@@ -14,7 +15,7 @@ public sealed class InstanceInterceptorActionT0<TTarget>
     readonly Interceptor interceptor;
     readonly Action? originalMethod;
 
-    internal InstanceInterceptorActionT0(Interceptor interceptor, Action? originalMethod)
+    internal InstanceInterceptorActionT0(Interceptor interceptor, Action originalMethod)
     {
         this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
         this.originalMethod = originalMethod;
@@ -24,10 +25,10 @@ public sealed class InstanceInterceptorActionT0<TTarget>
     public DetourScope Intercept(TTarget instance, Action replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        Action<TTarget> actual = (TTarget self) =>
+        var actual = (TTarget self) =>
         {
-            if (object.ReferenceEquals(self, instance)) replacement.Invoke();
-            else originalMethod?.Invoke();
+            if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance)) replacement.Invoke();
+            else originalMethod.Invoke();
         };
         return interceptor.Intercept(actual);
     }
@@ -36,7 +37,7 @@ public sealed class InstanceInterceptorActionT0<TTarget>
     public DetourScope InterceptUnsafe(Action replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        Action<TTarget> actual = (TTarget self) => replacement.Invoke();
+        var actual = (TTarget self) => replacement.Invoke();
         return interceptor.Intercept(actual);
     }
 }

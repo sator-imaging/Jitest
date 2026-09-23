@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Jitest;
@@ -14,7 +15,7 @@ public sealed class InstanceInterceptorFuncT1<TTarget, T1>
     readonly Interceptor interceptor;
     readonly Func<T1>? originalMethod;
 
-    internal InstanceInterceptorFuncT1(Interceptor interceptor, Func<T1>? originalMethod)
+    internal InstanceInterceptorFuncT1(Interceptor interceptor, Func<T1> originalMethod)
     {
         this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
         this.originalMethod = originalMethod;
@@ -24,10 +25,10 @@ public sealed class InstanceInterceptorFuncT1<TTarget, T1>
     public DetourScope Intercept(TTarget instance, Func<T1> replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        Func<TTarget, T1> actual = (TTarget self) =>
-            object.ReferenceEquals(self, instance)
+        var actual = (TTarget self) =>
+            (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))
                 ? replacement.Invoke()
-                : (originalMethod != null ? originalMethod.Invoke() : default!);
+                : originalMethod.Invoke();
         return interceptor.Intercept(actual);
     }
 
@@ -35,7 +36,7 @@ public sealed class InstanceInterceptorFuncT1<TTarget, T1>
     public DetourScope InterceptUnsafe(Func<T1> replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        Func<TTarget, T1> actual = (TTarget self) => replacement.Invoke();
+        var actual = (TTarget self) => replacement.Invoke();
         return interceptor.Intercept(actual);
     }
 }

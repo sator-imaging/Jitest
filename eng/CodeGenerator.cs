@@ -30,6 +30,7 @@ string header = $@"{licenseHeader}
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Jitest;
@@ -209,7 +210,7 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
     sb.AppendLine($"        var actual = (TTarget self{actParamDecl}) =>");
     sb.AppendLine("        {");
-    sb.AppendLine($"            if (object.ReferenceEquals(self, instance)) replacement.Invoke({actInvokeArgs});");
+    sb.AppendLine($"            if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance)) replacement.Invoke({actInvokeArgs});");
     sb.AppendLine($"            else originalMethod.Invoke({actInvokeArgs});");
     sb.AppendLine("        };");
     sb.AppendLine("        return interceptor.Intercept(actual);");
@@ -261,7 +262,7 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
     sb.AppendLine($"        var actual = (TTarget self{fnParamDecl}) =>");
-    sb.AppendLine("            object.ReferenceEquals(self, instance)");
+    sb.AppendLine("            (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))");
     sb.AppendLine($"                ? replacement.Invoke({fnInvokeArgs})");
     sb.AppendLine($"                : originalMethod.Invoke({fnInvokeArgs});");
     sb.AppendLine("        return interceptor.Intercept(actual);");
