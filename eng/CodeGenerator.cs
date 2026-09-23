@@ -138,7 +138,7 @@ static void GenerateStaticAction(string dir, string header, int n, string classN
     sb.AppendLine("public static partial class StaticInterceptorExtensions");
     sb.AppendLine("{");
     sb.AppendLine($"    /// <summary>Extension method for static method interceptor.</summary>");
-    sb.AppendLine($"    public static {className}<{classTparams}> StaticJitest<{extTparams}>(this Type type, string methodName, out {actUser}? originalMethod)");
+    sb.AppendLine($"    public static {className}<{classTparams}> StaticJitest<{extTparams}>(this Type type, string methodName, out {actUser} originalMethod)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (type == null) throw new ArgumentNullException(nameof(type));");
     sb.AppendLine($"        var interceptor = type.Jitest<{actUser}>(methodName, out originalMethod);");
@@ -176,7 +176,7 @@ static void GenerateStaticFunc(string dir, string header, int n, string classNam
     sb.AppendLine("public static partial class StaticInterceptorExtensions");
     sb.AppendLine("{");
     sb.AppendLine($"    /// <summary>Extension method for static method interceptor.</summary>");
-    sb.AppendLine($"    public static {className}<{classTparams}> StaticJitest<{extTparams}>(this Type type, string methodName, out {fnUser}? originalMethod)");
+    sb.AppendLine($"    public static {className}<{classTparams}> StaticJitest<{extTparams}>(this Type type, string methodName, out {fnUser} originalMethod)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (type == null) throw new ArgumentNullException(nameof(type));");
     sb.AppendLine($"        var interceptor = type.Jitest<{fnUser}>(methodName, out originalMethod);");
@@ -196,7 +196,7 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine($"public sealed class {className}<{classTparams}>");
     sb.AppendLine("{");
     sb.AppendLine("    readonly Interceptor interceptor;");
-    sb.AppendLine($"    readonly {actUser}? originalMethod;");
+    sb.AppendLine($"    readonly {actUser} originalMethod;");
     sb.AppendLine();
     sb.AppendLine($"    internal {className}(Interceptor interceptor, {actUser} originalMethod)");
     sb.AppendLine("    {");
@@ -231,7 +231,7 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine("public static partial class InstanceInterceptorExtensions");
     sb.AppendLine("{");
     sb.AppendLine($"    /// <summary>Extension method for instance method interceptor.</summary>");
-    sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {actUser}? originalMethod)");
+    sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {actUser} originalMethod)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (instance == null) throw new ArgumentNullException(nameof(instance));");
     sb.AppendLine($"        var interceptor = instance.Jitest<{actUser}>(methodName, out originalMethod);");
@@ -251,7 +251,7 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine($"public sealed class {className}<{classTparams}>");
     sb.AppendLine("{");
     sb.AppendLine("    readonly Interceptor interceptor;");
-    sb.AppendLine($"    readonly {fnUser}? originalMethod;");
+    sb.AppendLine($"    readonly {fnUser} originalMethod;");
     sb.AppendLine();
     sb.AppendLine($"    internal {className}(Interceptor interceptor, {fnUser} originalMethod)");
     sb.AppendLine("    {");
@@ -283,7 +283,7 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine("public static partial class InstanceInterceptorExtensions");
     sb.AppendLine("{");
     sb.AppendLine($"    /// <summary>Extension method for instance method interceptor.</summary>");
-    sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {fnUser}? originalMethod)");
+    sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {fnUser} originalMethod)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (instance == null) throw new ArgumentNullException(nameof(instance));");
     sb.AppendLine($"        var interceptor = instance.Jitest<{fnUser}>(methodName, out originalMethod);");
