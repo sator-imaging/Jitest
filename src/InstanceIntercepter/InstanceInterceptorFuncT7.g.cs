@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Jitest;
@@ -14,7 +15,7 @@ public sealed class InstanceInterceptorFuncT7<TTarget, T1, T2, T3, T4, T5, T6, T
     readonly Interceptor interceptor;
     readonly Func<T1, T2, T3, T4, T5, T6, T7>? originalMethod;
 
-    internal InstanceInterceptorFuncT7(Interceptor interceptor, Func<T1, T2, T3, T4, T5, T6, T7>? originalMethod)
+    internal InstanceInterceptorFuncT7(Interceptor interceptor, Func<T1, T2, T3, T4, T5, T6, T7> originalMethod)
     {
         this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
         this.originalMethod = originalMethod;
@@ -24,10 +25,10 @@ public sealed class InstanceInterceptorFuncT7<TTarget, T1, T2, T3, T4, T5, T6, T
     public DetourScope Intercept(TTarget instance, Func<T1, T2, T3, T4, T5, T6, T7> replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        Func<TTarget, T1, T2, T3, T4, T5, T6, T7> actual = (TTarget self, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6) =>
-            object.ReferenceEquals(self, instance)
+        var actual = (TTarget self, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6) =>
+            (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))
                 ? replacement.Invoke(t1, t2, t3, t4, t5, t6)
-                : (originalMethod != null ? originalMethod.Invoke(t1, t2, t3, t4, t5, t6) : default!);
+                : originalMethod.Invoke(t1, t2, t3, t4, t5, t6);
         return interceptor.Intercept(actual);
     }
 
@@ -35,7 +36,7 @@ public sealed class InstanceInterceptorFuncT7<TTarget, T1, T2, T3, T4, T5, T6, T
     public DetourScope InterceptUnsafe(Func<T1, T2, T3, T4, T5, T6, T7> replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        Func<TTarget, T1, T2, T3, T4, T5, T6, T7> actual = (TTarget self, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6) => replacement.Invoke(t1, t2, t3, t4, t5, t6);
+        var actual = (TTarget self, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6) => replacement.Invoke(t1, t2, t3, t4, t5, t6);
         return interceptor.Intercept(actual);
     }
 }
