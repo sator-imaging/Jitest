@@ -1,6 +1,8 @@
 // Licensed under the Apache-2.0 License
 // https://github.com/sator-imaging/Jitest
 
+#nullable enable
+
 using System;
 using System.Reflection;
 
@@ -9,12 +11,12 @@ namespace Jitest;
 /// <summary>Instance method interceptor for <see cref="Func&lt;T1&gt;"/>.</summary>
 public sealed class InstanceInterceptorFuncT1<TTarget, T1>
 {
-    readonly MethodInfo target;
-    readonly Delegate? originalMethod;
+    readonly Interceptor interceptor;
+    readonly Func<T1>? originalMethod;
 
-    internal InstanceInterceptorFuncT1(MethodInfo target, Delegate? originalMethod)
+    internal InstanceInterceptorFuncT1(Interceptor interceptor, Func<T1>? originalMethod)
     {
-        this.target = target ?? throw new ArgumentNullException(nameof(target));
+        this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
         this.originalMethod = originalMethod;
     }
 
@@ -22,12 +24,11 @@ public sealed class InstanceInterceptorFuncT1<TTarget, T1>
     public DetourScope Intercept(TTarget instance, Func<T1> replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        var orig = originalMethod != null ? (Func<TTarget, T1>)(object)originalMethod : null;
         Func<TTarget, T1> actual = (TTarget self) =>
             object.ReferenceEquals(self, instance)
                 ? replacement.Invoke()
-                : (orig != null ? orig.Invoke(self) : default!);
-        return DetourScope.Create(target, actual, instance);
+                : (originalMethod != null ? originalMethod.Invoke() : default!);
+        return interceptor.Intercept(actual);
     }
 
     /// <summary>Intercepts instance method across all instances with <see cref="Func&lt;T1&gt;"/>.</summary>
@@ -35,7 +36,7 @@ public sealed class InstanceInterceptorFuncT1<TTarget, T1>
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
         Func<TTarget, T1> actual = (TTarget self) => replacement.Invoke();
-        return DetourScope.Create(target, actual, instance: null);
+        return interceptor.Intercept(actual);
     }
 }
 
@@ -46,17 +47,7 @@ public static partial class InstanceInterceptorExtensions
     public static InstanceInterceptorFuncT1<TTarget, T1> InstanceJitest<TTarget, T1>(this TTarget instance, string methodName, out Func<T1>? originalMethod)
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
-        if (typeof(TTarget).IsValueType)
-        {
-            var (method, _) = Extensions.ResolveMethod<Delegate>(typeof(TTarget), methodName);
-            originalMethod = null;
-            return new InstanceInterceptorFuncT1<TTarget, T1>(method, null);
-        }
-        else
-        {
-            var (method, dele) = Extensions.ResolveMethod<Func<TTarget, T1>>(typeof(TTarget), methodName);
-            originalMethod = dele != null ? (Func<T1>)((object)dele) : null;
-            return new InstanceInterceptorFuncT1<TTarget, T1>(method, dele);
-        }
+        var interceptor = instance.Jitest<Func<T1>>(methodName, out originalMethod);
+        return new InstanceInterceptorFuncT1<TTarget, T1>(interceptor, originalMethod);
     }
 }
