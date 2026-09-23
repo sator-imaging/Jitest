@@ -1,8 +1,6 @@
 // Licensed under the Apache-2.0 License
 // https://github.com/sator-imaging/Jitest
 
-#:property LangVersion=latest
-#:property TargetFramework=net10.0
 #:property PublishAot=false
 
 using System;
