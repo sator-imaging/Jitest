@@ -16,6 +16,9 @@ jobs:
 
     # FIX: cannot use ubuntu-latest/slim for net5.0
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      pull-requests: write
     strategy:
       matrix:
         configuration: [ Debug, Release ]
@@ -31,6 +34,14 @@ jobs:
             7.x.x
             6.x.x
             5.x.x
+
+      - run: dotnet run eng/CodeGenerator.cs
+
+      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1  # v8.1.1
+        if: matrix.configuration == 'Debug'
+        with:
+          title: "[bot] dotnet run `eng/CodeGenerator.cs`"
+          branch: "bot/eng-code-generator"
 
       - name: Test
         run: |
