@@ -16,44 +16,44 @@ namespace Jitest.Test;
 public class InstanceInterceptorActionT13Test
 {
     [Test]
-    public async Task TestAction13()
+    public async Task TestVoidMethod_13()
     {
         var target = new InstanceTestTargets();
         var other = new InstanceTestTargets();
-        var interceptor = target.InstanceJitest<InstanceTestTargets, int, int, int, int, int, int, int, int, int, int, int, int, int>("Action13", out Action<int, int, int, int, int, int, int, int, int, int, int, int, int> originalMethod);
+        var interceptor = target.InstanceJitest<InstanceTestTargets, int, int, int, int, int, int, int, int, int, int, int, int, int>("VoidMethod_13", out Action<int, int, int, int, int, int, int, int, int, int, int, int, int> originalMethod);
 
         // 1. Intercept specific instance
         bool targetIntercepted = false;
         using (interceptor.Intercept(target, (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13) => { targetIntercepted = true; }))
         {
-            target.Action13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+            target.VoidMethod_13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
             await Assert.That(targetIntercepted).IsTrue();
-            await Assert.That(target.Action13Count).IsEqualTo(0);
+            await Assert.That(target.VoidMethod_13Count).IsEqualTo(0);
 
-            other.Action13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
-            await Assert.That(other.Action13Count).IsGreaterThan(0);
+            other.VoidMethod_13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+            await Assert.That(other.VoidMethod_13Count).IsGreaterThan(0);
         }
 
         // 2. Intercept unsafe (all instances)
         bool unsafeIntercepted = false;
         using (interceptor.InterceptUnsafe((t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13) => { unsafeIntercepted = true; }))
         {
-            target.Action13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+            target.VoidMethod_13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
             await Assert.That(unsafeIntercepted).IsTrue();
 
             unsafeIntercepted = false;
-            other.Action13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+            other.VoidMethod_13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
             await Assert.That(unsafeIntercepted).IsTrue();
         }
 
         // 3. Original method delegate
-        int targetCountBefore = target.Action13Count;
+        int targetCountBefore = target.VoidMethod_13Count;
         originalMethod.Invoke(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
-        await Assert.That(target.Action13Count).IsGreaterThan(targetCountBefore);
+        await Assert.That(target.VoidMethod_13Count).IsGreaterThan(targetCountBefore);
 
         // 4. Reverted after disposal
-        int otherCountBefore = other.Action13Count;
-        other.Action13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
-        await Assert.That(other.Action13Count).IsGreaterThan(otherCountBefore);
+        int otherCountBefore = other.VoidMethod_13Count;
+        other.VoidMethod_13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+        await Assert.That(other.VoidMethod_13Count).IsGreaterThan(otherCountBefore);
     }
 }

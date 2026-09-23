@@ -16,31 +16,31 @@ namespace Jitest.Test;
 public class InstanceInterceptorFuncT5Test
 {
     [Test]
-    public async Task TestFunc5()
+    public async Task TestGetInt_5()
     {
         var target = new InstanceTestTargets();
         var other = new InstanceTestTargets();
-        var targetOriginal = target.Func5(1, 2, 3, 4);
-        var otherOriginal = other.Func5(1, 2, 3, 4);
-        var interceptor = target.InstanceJitest<InstanceTestTargets, int, int, int, int, int>("Func5", out Func<int, int, int, int, int> originalMethod);
+        var targetOriginal = target.GetInt_5(1, 2, 3, 4);
+        var otherOriginal = other.GetInt_5(1, 2, 3, 4);
+        var interceptor = target.InstanceJitest<InstanceTestTargets, int, int, int, int, int>("GetInt_5", out Func<int, int, int, int, int> originalMethod);
 
         // 1. Intercept specific instance
         using (interceptor.Intercept(target, (t1, t2, t3, t4) => 8888))
         {
-            var targetRes = target.Func5(1, 2, 3, 4);
+            var targetRes = target.GetInt_5(1, 2, 3, 4);
             await Assert.That(targetRes).IsEqualTo(8888);
 
-            var otherRes = other.Func5(1, 2, 3, 4);
+            var otherRes = other.GetInt_5(1, 2, 3, 4);
             await Assert.That(otherRes).IsEqualTo(otherOriginal);
         }
 
         // 2. Intercept unsafe (all instances)
         using (interceptor.InterceptUnsafe((t1, t2, t3, t4) => 7777))
         {
-            var targetRes = target.Func5(1, 2, 3, 4);
+            var targetRes = target.GetInt_5(1, 2, 3, 4);
             await Assert.That(targetRes).IsEqualTo(7777);
 
-            var otherRes = other.Func5(1, 2, 3, 4);
+            var otherRes = other.GetInt_5(1, 2, 3, 4);
             await Assert.That(otherRes).IsEqualTo(7777);
         }
 
@@ -49,7 +49,7 @@ public class InstanceInterceptorFuncT5Test
         await Assert.That(origRes).IsEqualTo(targetOriginal);
 
         // 4. Reverted after disposal
-        var afterRes = target.Func5(1, 2, 3, 4);
+        var afterRes = target.GetInt_5(1, 2, 3, 4);
         await Assert.That(afterRes).IsEqualTo(targetOriginal);
     }
 }

@@ -16,24 +16,24 @@ namespace Jitest.Test;
 public class StaticInterceptorActionT2Test
 {
     [Test]
-    public async Task TestAction2()
+    public async Task TestStaticVoidMethod_2()
     {
-        StaticTestTargets.Action2Count = 0;
+        StaticTestTargets.StaticVoidMethod_2Count = 0;
         bool intercepted = false;
-        var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int, int>("Action2", out Action<int, int> originalMethod);
+        var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int, int>("StaticVoidMethod_2", out Action<int, int> originalMethod);
 
         using (interceptor.Intercept((t1, t2) => { intercepted = true; }))
         {
-            StaticTestTargets.Action2(1, 2);
+            StaticTestTargets.StaticVoidMethod_2(1, 2);
             await Assert.That(intercepted).IsTrue();
-            await Assert.That(StaticTestTargets.Action2Count).IsEqualTo(0);
+            await Assert.That(StaticTestTargets.StaticVoidMethod_2Count).IsEqualTo(0);
 
             originalMethod.Invoke(1, 2);
-            await Assert.That(StaticTestTargets.Action2Count).IsGreaterThan(0);
+            await Assert.That(StaticTestTargets.StaticVoidMethod_2Count).IsGreaterThan(0);
         }
 
-        StaticTestTargets.Action2Count = 0;
-        StaticTestTargets.Action2(1, 2);
-        await Assert.That(StaticTestTargets.Action2Count).IsGreaterThan(0);
+        StaticTestTargets.StaticVoidMethod_2Count = 0;
+        StaticTestTargets.StaticVoidMethod_2(1, 2);
+        await Assert.That(StaticTestTargets.StaticVoidMethod_2Count).IsGreaterThan(0);
     }
 }

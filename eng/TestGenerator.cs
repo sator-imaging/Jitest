@@ -45,8 +45,8 @@ for (int n = 0; n <= 16; n++)
 {
     if (n == 0)
     {
-        GenerateStaticActionTest(staticTestDir, header, 0, "StaticInterceptorActionT0Test", "Action0", "StaticTestTargets", "Action", "", "");
-        GenerateInstanceActionTest(instanceTestDir, header, 0, "InstanceInterceptorActionT0Test", "Action0", "InstanceTestTargets", "Action", "", "");
+        GenerateStaticActionTest(staticTestDir, header, 0, "StaticInterceptorActionT0Test", "StaticVoidMethod_0", "StaticTestTargets", "Action", "", "");
+        GenerateInstanceActionTest(instanceTestDir, header, 0, "InstanceInterceptorActionT0Test", "VoidMethod_0", "InstanceTestTargets", "Action", "", "");
     }
     else if (n <= 15)
     {
@@ -62,7 +62,7 @@ for (int n = 0; n <= 16; n++)
         string[] lambdaParams = Enumerable.Range(1, n).Select(i => $"t{i}").ToArray();
         string lambdaParamsStr = string.Join(", ", lambdaParams);
 
-        GenerateStaticActionTest(staticTestDir, header, n, $"StaticInterceptorActionT{n}Test", $"Action{n}", extTargsAct, actDelegateType, callArgsStr, lambdaParamsStr);
+        GenerateStaticActionTest(staticTestDir, header, n, $"StaticInterceptorActionT{n}Test", $"StaticVoidMethod_{n}", extTargsAct, actDelegateType, callArgsStr, lambdaParamsStr);
 
         // Func n: n-1 params, return type int (Func<int, ..., int> has n types total)
         int funcArgCount = n - 1;
@@ -77,10 +77,10 @@ for (int n = 0; n <= 16; n++)
         string[] fnLambdaParams = Enumerable.Range(1, funcArgCount).Select(i => $"t{i}").ToArray();
         string fnLambdaParamsStr = string.Join(", ", fnLambdaParams);
 
-        GenerateStaticFuncTest(staticTestDir, header, n, $"StaticInterceptorFuncT{n}Test", $"Func{n}", extTargsFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
+        GenerateStaticFuncTest(staticTestDir, header, n, $"StaticInterceptorFuncT{n}Test", $"StaticGetIntMethod_{n}", extTargsFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
 
-        GenerateInstanceActionTest(instanceTestDir, header, n, $"InstanceInterceptorActionT{n}Test", $"Action{n}", extTargsInstanceAct, actDelegateType, callArgsStr, lambdaParamsStr);
-        GenerateInstanceFuncTest(instanceTestDir, header, n, $"InstanceInterceptorFuncT{n}Test", $"Func{n}", extTargsInstanceFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
+        GenerateInstanceActionTest(instanceTestDir, header, n, $"InstanceInterceptorActionT{n}Test", $"VoidMethod_{n}", extTargsInstanceAct, actDelegateType, callArgsStr, lambdaParamsStr);
+        GenerateInstanceFuncTest(instanceTestDir, header, n, $"InstanceInterceptorFuncT{n}Test", $"GetInt_{n}", extTargsInstanceFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
     }
     else // n == 16 (Func16 only)
     {
@@ -96,8 +96,8 @@ for (int n = 0; n <= 16; n++)
         string[] fnLambdaParams = Enumerable.Range(1, funcArgCount).Select(i => $"t{i}").ToArray();
         string fnLambdaParamsStr = string.Join(", ", fnLambdaParams);
 
-        GenerateStaticFuncTest(staticTestDir, header, n, $"StaticInterceptorFuncT{n}Test", $"Func{n}", extTargsFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
-        GenerateInstanceFuncTest(instanceTestDir, header, n, $"InstanceInterceptorFuncT{n}Test", $"Func{n}", extTargsInstanceFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
+        GenerateStaticFuncTest(staticTestDir, header, n, $"StaticInterceptorFuncT{n}Test", $"StaticGetIntMethod_{n}", extTargsFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
+        GenerateInstanceFuncTest(instanceTestDir, header, n, $"InstanceInterceptorFuncT{n}Test", $"GetInt_{n}", extTargsInstanceFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
     }
 }
 
@@ -118,16 +118,16 @@ static void GenerateTestTargets(string testDir, string licenseHeader)
     sb.AppendLine("{");
     for (int n = 0; n <= 15; n++)
     {
-        sb.AppendLine($"    public static int Action{n}Count;");
+        sb.AppendLine($"    public static int StaticVoidMethod_{n}Count;");
         if (n == 0)
         {
-            sb.AppendLine("    public static void Action0() => Action0Count++;");
+            sb.AppendLine("    public static void StaticVoidMethod_0() => StaticVoidMethod_0Count++;");
         }
         else
         {
             string pDecl = string.Join(", ", Enumerable.Range(1, n).Select(i => $"int t{i}"));
             string pSum = string.Join(" + ", Enumerable.Range(1, n).Select(i => $"t{i}"));
-            sb.AppendLine($"    public static void Action{n}({pDecl}) => Action{n}Count += {pSum};");
+            sb.AppendLine($"    public static void StaticVoidMethod_{n}({pDecl}) => StaticVoidMethod_{n}Count += {pSum};");
         }
     }
     for (int n = 1; n <= 16; n++)
@@ -135,13 +135,13 @@ static void GenerateTestTargets(string testDir, string licenseHeader)
         int argCount = n - 1;
         if (argCount == 0)
         {
-            sb.AppendLine($"    public static int Func{n}() => 100 + {n};");
+            sb.AppendLine($"    public static int StaticGetIntMethod_{n}() => 100 + {n};");
         }
         else
         {
             string pDecl = string.Join(", ", Enumerable.Range(1, argCount).Select(i => $"int t{i}"));
             string pSum = string.Join(" + ", Enumerable.Range(1, argCount).Select(i => $"t{i}"));
-            sb.AppendLine($"    public static int Func{n}({pDecl}) => {pSum} + {n} * 10;");
+            sb.AppendLine($"    public static int StaticGetIntMethod_{n}({pDecl}) => {pSum} + {n} * 10;");
         }
     }
     sb.AppendLine("}");
@@ -152,16 +152,16 @@ static void GenerateTestTargets(string testDir, string licenseHeader)
     sb.AppendLine("{");
     for (int n = 0; n <= 15; n++)
     {
-        sb.AppendLine($"    public int Action{n}Count;");
+        sb.AppendLine($"    public int VoidMethod_{n}Count;");
         if (n == 0)
         {
-            sb.AppendLine("    public void Action0() => Action0Count++;");
+            sb.AppendLine("    public void VoidMethod_0() => VoidMethod_0Count++;");
         }
         else
         {
             string pDecl = string.Join(", ", Enumerable.Range(1, n).Select(i => $"int t{i}"));
             string pSum = string.Join(" + ", Enumerable.Range(1, n).Select(i => $"t{i}"));
-            sb.AppendLine($"    public void Action{n}({pDecl}) => Action{n}Count += {pSum};");
+            sb.AppendLine($"    public void VoidMethod_{n}({pDecl}) => VoidMethod_{n}Count += {pSum};");
         }
     }
     for (int n = 1; n <= 16; n++)
@@ -169,13 +169,13 @@ static void GenerateTestTargets(string testDir, string licenseHeader)
         int argCount = n - 1;
         if (argCount == 0)
         {
-            sb.AppendLine($"    public int Func{n}() => 200 + {n};");
+            sb.AppendLine($"    public int GetInt_{n}() => 200 + {n};");
         }
         else
         {
             string pDecl = string.Join(", ", Enumerable.Range(1, argCount).Select(i => $"int t{i}"));
             string pSum = string.Join(" + ", Enumerable.Range(1, argCount).Select(i => $"t{i}"));
-            sb.AppendLine($"    public int Func{n}({pDecl}) => {pSum} + {n} * 10;");
+            sb.AppendLine($"    public int GetInt_{n}({pDecl}) => {pSum} + {n} * 10;");
         }
     }
     sb.AppendLine("}");
@@ -266,10 +266,10 @@ static void GenerateInstanceActionTest(string dir, string header, int n, string 
     sb.AppendLine("        {");
     sb.AppendLine($"            target.{methodName}({callArgs});");
     sb.AppendLine("            await Assert.That(targetIntercepted).IsTrue();");
-    sb.AppendLine("            await Assert.That(target.Action" + n + "Count).IsEqualTo(0);");
+    sb.AppendLine($"            await Assert.That(target.{methodName}Count).IsEqualTo(0);");
     sb.AppendLine();
     sb.AppendLine($"            other.{methodName}({callArgs});");
-    sb.AppendLine("            await Assert.That(other.Action" + n + "Count).IsGreaterThan(0);");
+    sb.AppendLine($"            await Assert.That(other.{methodName}Count).IsGreaterThan(0);");
     sb.AppendLine("        }");
     sb.AppendLine();
     sb.AppendLine("        // 2. Intercept unsafe (all instances)");

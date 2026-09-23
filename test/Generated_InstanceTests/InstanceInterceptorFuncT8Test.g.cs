@@ -16,31 +16,31 @@ namespace Jitest.Test;
 public class InstanceInterceptorFuncT8Test
 {
     [Test]
-    public async Task TestFunc8()
+    public async Task TestGetInt_8()
     {
         var target = new InstanceTestTargets();
         var other = new InstanceTestTargets();
-        var targetOriginal = target.Func8(1, 2, 3, 4, 5, 6, 7);
-        var otherOriginal = other.Func8(1, 2, 3, 4, 5, 6, 7);
-        var interceptor = target.InstanceJitest<InstanceTestTargets, int, int, int, int, int, int, int, int>("Func8", out Func<int, int, int, int, int, int, int, int> originalMethod);
+        var targetOriginal = target.GetInt_8(1, 2, 3, 4, 5, 6, 7);
+        var otherOriginal = other.GetInt_8(1, 2, 3, 4, 5, 6, 7);
+        var interceptor = target.InstanceJitest<InstanceTestTargets, int, int, int, int, int, int, int, int>("GetInt_8", out Func<int, int, int, int, int, int, int, int> originalMethod);
 
         // 1. Intercept specific instance
         using (interceptor.Intercept(target, (t1, t2, t3, t4, t5, t6, t7) => 8888))
         {
-            var targetRes = target.Func8(1, 2, 3, 4, 5, 6, 7);
+            var targetRes = target.GetInt_8(1, 2, 3, 4, 5, 6, 7);
             await Assert.That(targetRes).IsEqualTo(8888);
 
-            var otherRes = other.Func8(1, 2, 3, 4, 5, 6, 7);
+            var otherRes = other.GetInt_8(1, 2, 3, 4, 5, 6, 7);
             await Assert.That(otherRes).IsEqualTo(otherOriginal);
         }
 
         // 2. Intercept unsafe (all instances)
         using (interceptor.InterceptUnsafe((t1, t2, t3, t4, t5, t6, t7) => 7777))
         {
-            var targetRes = target.Func8(1, 2, 3, 4, 5, 6, 7);
+            var targetRes = target.GetInt_8(1, 2, 3, 4, 5, 6, 7);
             await Assert.That(targetRes).IsEqualTo(7777);
 
-            var otherRes = other.Func8(1, 2, 3, 4, 5, 6, 7);
+            var otherRes = other.GetInt_8(1, 2, 3, 4, 5, 6, 7);
             await Assert.That(otherRes).IsEqualTo(7777);
         }
 
@@ -49,7 +49,7 @@ public class InstanceInterceptorFuncT8Test
         await Assert.That(origRes).IsEqualTo(targetOriginal);
 
         // 4. Reverted after disposal
-        var afterRes = target.Func8(1, 2, 3, 4, 5, 6, 7);
+        var afterRes = target.GetInt_8(1, 2, 3, 4, 5, 6, 7);
         await Assert.That(afterRes).IsEqualTo(targetOriginal);
     }
 }
