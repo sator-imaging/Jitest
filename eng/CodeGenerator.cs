@@ -197,7 +197,7 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine("    readonly Interceptor interceptor;");
     sb.AppendLine($"    readonly {actUser}? originalMethod;");
     sb.AppendLine();
-    sb.AppendLine($"    internal {className}(Interceptor interceptor, {actUser}? originalMethod)");
+    sb.AppendLine($"    internal {className}(Interceptor interceptor, {actUser} originalMethod)");
     sb.AppendLine("    {");
     sb.AppendLine("        this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));");
     sb.AppendLine("        this.originalMethod = originalMethod;");
@@ -210,7 +210,7 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine($"        var actual = (TTarget self{actParamDecl}) =>");
     sb.AppendLine("        {");
     sb.AppendLine($"            if (object.ReferenceEquals(self, instance)) replacement.Invoke({actInvokeArgs});");
-    sb.AppendLine($"            else originalMethod?.Invoke({actInvokeArgs});");
+    sb.AppendLine($"            else originalMethod.Invoke({actInvokeArgs});");
     sb.AppendLine("        };");
     sb.AppendLine("        return interceptor.Intercept(actual);");
     sb.AppendLine("    }");
@@ -250,7 +250,7 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine("    readonly Interceptor interceptor;");
     sb.AppendLine($"    readonly {fnUser}? originalMethod;");
     sb.AppendLine();
-    sb.AppendLine($"    internal {className}(Interceptor interceptor, {fnUser}? originalMethod)");
+    sb.AppendLine($"    internal {className}(Interceptor interceptor, {fnUser} originalMethod)");
     sb.AppendLine("    {");
     sb.AppendLine("        this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));");
     sb.AppendLine("        this.originalMethod = originalMethod;");
@@ -263,7 +263,7 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine($"        var actual = (TTarget self{fnParamDecl}) =>");
     sb.AppendLine("            object.ReferenceEquals(self, instance)");
     sb.AppendLine($"                ? replacement.Invoke({fnInvokeArgs})");
-    sb.AppendLine($"                : (originalMethod != null ? originalMethod.Invoke({fnInvokeArgs}) : default!);");
+    sb.AppendLine($"                : originalMethod.Invoke({fnInvokeArgs});");
     sb.AppendLine("        return interceptor.Intercept(actual);");
     sb.AppendLine("    }");
     sb.AppendLine();
