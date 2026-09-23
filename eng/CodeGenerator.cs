@@ -210,8 +210,10 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
     sb.AppendLine($"        var actual = (TTarget self{actParamDecl}) =>");
     sb.AppendLine("        {");
-    sb.AppendLine($"            if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance)) replacement.Invoke({actInvokeArgs});");
-    sb.AppendLine($"            else originalMethod.Invoke({actInvokeArgs});");
+    sb.AppendLine("            if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))");
+    sb.AppendLine($"                replacement.Invoke({actInvokeArgs});");
+    sb.AppendLine("            else");
+    sb.AppendLine($"                originalMethod.Invoke({actInvokeArgs});");
     sb.AppendLine("        };");
     sb.AppendLine("        return interceptor.Intercept(actual);");
     sb.AppendLine("    }");

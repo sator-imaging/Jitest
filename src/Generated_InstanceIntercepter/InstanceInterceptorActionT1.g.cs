@@ -27,8 +27,10 @@ public sealed class InstanceInterceptorActionT1<TTarget, T1>
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
         var actual = (TTarget self, T1 t1) =>
         {
-            if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance)) replacement.Invoke(t1);
-            else originalMethod.Invoke(t1);
+            if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))
+                replacement.Invoke(t1);
+            else
+                originalMethod.Invoke(t1);
         };
         return interceptor.Intercept(actual);
     }
