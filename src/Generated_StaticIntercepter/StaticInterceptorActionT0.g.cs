@@ -31,7 +31,7 @@ public sealed class StaticInterceptorActionT0<TTarget>
 public static partial class StaticInterceptorExtensions
 {
     /// <summary>Extension method for static method interceptor.</summary>
-    public static StaticInterceptorActionT0<TTarget> StaticJitest<TTarget>(this Type type, string methodName, out Action? originalMethod)
+    public static StaticInterceptorActionT0<TTarget> StaticJitest<TTarget>(this Type type, string methodName, out Action originalMethod)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
         var interceptor = type.Jitest<Action>(methodName, out originalMethod);

@@ -31,7 +31,7 @@ public sealed class StaticInterceptorFuncT1<TTarget, T1>
 public static partial class StaticInterceptorExtensions
 {
     /// <summary>Extension method for static method interceptor.</summary>
-    public static StaticInterceptorFuncT1<TTarget, T1> StaticJitest<TTarget, T1>(this Type type, string methodName, out Func<T1>? originalMethod)
+    public static StaticInterceptorFuncT1<TTarget, T1> StaticJitest<TTarget, T1>(this Type type, string methodName, out Func<T1> originalMethod)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
         var interceptor = type.Jitest<Func<T1>>(methodName, out originalMethod);

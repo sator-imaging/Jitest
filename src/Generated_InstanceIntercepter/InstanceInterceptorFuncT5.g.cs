@@ -13,7 +13,7 @@ namespace Jitest;
 public sealed class InstanceInterceptorFuncT5<TTarget, T1, T2, T3, T4, T5>
 {
     readonly Interceptor interceptor;
-    readonly Func<T1, T2, T3, T4, T5>? originalMethod;
+    readonly Func<T1, T2, T3, T4, T5> originalMethod;
 
     internal InstanceInterceptorFuncT5(Interceptor interceptor, Func<T1, T2, T3, T4, T5> originalMethod)
     {
@@ -45,7 +45,7 @@ public sealed class InstanceInterceptorFuncT5<TTarget, T1, T2, T3, T4, T5>
 public static partial class InstanceInterceptorExtensions
 {
     /// <summary>Extension method for instance method interceptor.</summary>
-    public static InstanceInterceptorFuncT5<TTarget, T1, T2, T3, T4, T5> InstanceJitest<TTarget, T1, T2, T3, T4, T5>(this TTarget instance, string methodName, out Func<T1, T2, T3, T4, T5>? originalMethod)
+    public static InstanceInterceptorFuncT5<TTarget, T1, T2, T3, T4, T5> InstanceJitest<TTarget, T1, T2, T3, T4, T5>(this TTarget instance, string methodName, out Func<T1, T2, T3, T4, T5> originalMethod)
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
         var interceptor = instance.Jitest<Func<T1, T2, T3, T4, T5>>(methodName, out originalMethod);

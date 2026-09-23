@@ -13,7 +13,7 @@ namespace Jitest;
 public sealed class InstanceInterceptorActionT0<TTarget>
 {
     readonly Interceptor interceptor;
-    readonly Action? originalMethod;
+    readonly Action originalMethod;
 
     internal InstanceInterceptorActionT0(Interceptor interceptor, Action originalMethod)
     {
@@ -48,7 +48,7 @@ public sealed class InstanceInterceptorActionT0<TTarget>
 public static partial class InstanceInterceptorExtensions
 {
     /// <summary>Extension method for instance method interceptor.</summary>
-    public static InstanceInterceptorActionT0<TTarget> InstanceJitest<TTarget>(this TTarget instance, string methodName, out Action? originalMethod)
+    public static InstanceInterceptorActionT0<TTarget> InstanceJitest<TTarget>(this TTarget instance, string methodName, out Action originalMethod)
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
         var interceptor = instance.Jitest<Action>(methodName, out originalMethod);

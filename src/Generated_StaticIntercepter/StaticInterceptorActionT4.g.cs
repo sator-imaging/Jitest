@@ -31,7 +31,7 @@ public sealed class StaticInterceptorActionT4<TTarget, T1, T2, T3, T4>
 public static partial class StaticInterceptorExtensions
 {
     /// <summary>Extension method for static method interceptor.</summary>
-    public static StaticInterceptorActionT4<TTarget, T1, T2, T3, T4> StaticJitest<TTarget, T1, T2, T3, T4>(this Type type, string methodName, out Action<T1, T2, T3, T4>? originalMethod)
+    public static StaticInterceptorActionT4<TTarget, T1, T2, T3, T4> StaticJitest<TTarget, T1, T2, T3, T4>(this Type type, string methodName, out Action<T1, T2, T3, T4> originalMethod)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
         var interceptor = type.Jitest<Action<T1, T2, T3, T4>>(methodName, out originalMethod);
