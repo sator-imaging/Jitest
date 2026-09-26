@@ -13,12 +13,12 @@ namespace Jitest;
 public sealed class InstanceInterceptorFuncT1<TTarget, T1>
 {
     readonly Interceptor interceptor;
-    readonly Func<T1> originalMethod;
+    readonly Func<TTarget, T1> originalMethodInternal;
 
-    internal InstanceInterceptorFuncT1(Interceptor interceptor, Func<T1> originalMethod)
+    internal InstanceInterceptorFuncT1(Interceptor interceptor, Func<TTarget, T1> originalMethodInternal)
     {
         this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
-        this.originalMethod = originalMethod;
+        this.originalMethodInternal = originalMethodInternal;
     }
 
     /// <summary>Intercepts instance method for specific instance with <see cref="Func&lt;T1&gt;"/>.</summary>
@@ -28,7 +28,7 @@ public sealed class InstanceInterceptorFuncT1<TTarget, T1>
         var actual = (TTarget self) =>
             (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))
                 ? replacement.Invoke()
-                : originalMethod.Invoke();
+                : originalMethodInternal.Invoke(self);
         return interceptor.Intercept(actual);
     }
 
@@ -48,7 +48,8 @@ public static partial class InstanceInterceptorExtensions
     public static InstanceInterceptorFuncT1<TTarget, T1> InstanceJitest<TTarget, T1>(this TTarget instance, string methodName, out Func<T1> originalMethod)
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
-        var interceptor = instance.Jitest<Func<T1>>(methodName, out originalMethod);
-        return new InstanceInterceptorFuncT1<TTarget, T1>(interceptor, originalMethod);
+        var interceptor = instance.Jitest<Func<TTarget, T1>>(methodName, out var originalMethodInternal);
+        originalMethod = () => originalMethodInternal.Invoke(instance);
+        return new InstanceInterceptorFuncT1<TTarget, T1>(interceptor, originalMethodInternal);
     }
 }
