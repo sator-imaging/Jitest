@@ -16,21 +16,21 @@ namespace Jitest.Test;
 public class StaticInterceptorFuncT1Test
 {
     [Test]
-    public async Task TestStaticGetIntMethod_1()
+    public async Task TestStaticGetInt_1()
     {
-        var originalVal = StaticTestTargets.StaticGetIntMethod_1();
-        var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int>("StaticGetIntMethod_1", out Func<int> originalMethod);
+        var originalVal = StaticTestTargets.StaticGetInt_1();
+        var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int>("StaticGetInt_1", out Func<int> originalMethod);
 
         using (interceptor.Intercept(() => 9999))
         {
-            var res = StaticTestTargets.StaticGetIntMethod_1();
+            var res = StaticTestTargets.StaticGetInt_1();
             await Assert.That(res).IsEqualTo(9999);
 
             var origRes = originalMethod.Invoke();
             await Assert.That(origRes).IsEqualTo(originalVal);
         }
 
-        var afterRes = StaticTestTargets.StaticGetIntMethod_1();
+        var afterRes = StaticTestTargets.StaticGetInt_1();
         await Assert.That(afterRes).IsEqualTo(originalVal);
     }
 }

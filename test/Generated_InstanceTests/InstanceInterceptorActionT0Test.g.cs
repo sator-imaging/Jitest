@@ -16,44 +16,44 @@ namespace Jitest.Test;
 public class InstanceInterceptorActionT0Test
 {
     [Test]
-    public async Task TestVoidMethod_0()
+    public async Task TestVoid_0()
     {
         var target = new InstanceTestTargets();
         var other = new InstanceTestTargets();
-        var interceptor = target.InstanceJitest<InstanceTestTargets>("VoidMethod_0", out Action originalMethod);
+        var interceptor = target.InstanceJitest<InstanceTestTargets>("Void_0", out Action originalMethod);
 
         // 1. Intercept specific instance
         bool targetIntercepted = false;
         using (interceptor.Intercept(target, () => { targetIntercepted = true; }))
         {
-            target.VoidMethod_0();
+            target.Void_0();
             await Assert.That(targetIntercepted).IsTrue();
-            await Assert.That(target.VoidMethod_0Count).IsEqualTo(0);
+            await Assert.That(target.Void_0Count).IsEqualTo(0);
 
-            other.VoidMethod_0();
-            await Assert.That(other.VoidMethod_0Count).IsGreaterThan(0);
+            other.Void_0();
+            await Assert.That(other.Void_0Count).IsGreaterThan(0);
         }
 
         // 2. Intercept unsafe (all instances)
         bool unsafeIntercepted = false;
         using (interceptor.InterceptUnsafe(() => { unsafeIntercepted = true; }))
         {
-            target.VoidMethod_0();
+            target.Void_0();
             await Assert.That(unsafeIntercepted).IsTrue();
 
             unsafeIntercepted = false;
-            other.VoidMethod_0();
+            other.Void_0();
             await Assert.That(unsafeIntercepted).IsTrue();
         }
 
         // 3. Original method delegate
-        int targetCountBefore = target.VoidMethod_0Count;
+        int targetCountBefore = target.Void_0Count;
         originalMethod.Invoke();
-        await Assert.That(target.VoidMethod_0Count).IsGreaterThan(targetCountBefore);
+        await Assert.That(target.Void_0Count).IsGreaterThan(targetCountBefore);
 
         // 4. Reverted after disposal
-        int otherCountBefore = other.VoidMethod_0Count;
-        other.VoidMethod_0();
-        await Assert.That(other.VoidMethod_0Count).IsGreaterThan(otherCountBefore);
+        int otherCountBefore = other.Void_0Count;
+        other.Void_0();
+        await Assert.That(other.Void_0Count).IsGreaterThan(otherCountBefore);
     }
 }

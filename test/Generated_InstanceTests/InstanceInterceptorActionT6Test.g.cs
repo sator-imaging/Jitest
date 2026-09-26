@@ -16,44 +16,44 @@ namespace Jitest.Test;
 public class InstanceInterceptorActionT6Test
 {
     [Test]
-    public async Task TestVoidMethod_6()
+    public async Task TestVoid_6()
     {
         var target = new InstanceTestTargets();
         var other = new InstanceTestTargets();
-        var interceptor = target.InstanceJitest<InstanceTestTargets, int, int, int, int, int, int>("VoidMethod_6", out Action<int, int, int, int, int, int> originalMethod);
+        var interceptor = target.InstanceJitest<InstanceTestTargets, int, int, int, int, int, int>("Void_6", out Action<int, int, int, int, int, int> originalMethod);
 
         // 1. Intercept specific instance
         bool targetIntercepted = false;
         using (interceptor.Intercept(target, (t1, t2, t3, t4, t5, t6) => { targetIntercepted = true; }))
         {
-            target.VoidMethod_6(1, 2, 3, 4, 5, 6);
+            target.Void_6(1, 2, 3, 4, 5, 6);
             await Assert.That(targetIntercepted).IsTrue();
-            await Assert.That(target.VoidMethod_6Count).IsEqualTo(0);
+            await Assert.That(target.Void_6Count).IsEqualTo(0);
 
-            other.VoidMethod_6(1, 2, 3, 4, 5, 6);
-            await Assert.That(other.VoidMethod_6Count).IsGreaterThan(0);
+            other.Void_6(1, 2, 3, 4, 5, 6);
+            await Assert.That(other.Void_6Count).IsGreaterThan(0);
         }
 
         // 2. Intercept unsafe (all instances)
         bool unsafeIntercepted = false;
         using (interceptor.InterceptUnsafe((t1, t2, t3, t4, t5, t6) => { unsafeIntercepted = true; }))
         {
-            target.VoidMethod_6(1, 2, 3, 4, 5, 6);
+            target.Void_6(1, 2, 3, 4, 5, 6);
             await Assert.That(unsafeIntercepted).IsTrue();
 
             unsafeIntercepted = false;
-            other.VoidMethod_6(1, 2, 3, 4, 5, 6);
+            other.Void_6(1, 2, 3, 4, 5, 6);
             await Assert.That(unsafeIntercepted).IsTrue();
         }
 
         // 3. Original method delegate
-        int targetCountBefore = target.VoidMethod_6Count;
+        int targetCountBefore = target.Void_6Count;
         originalMethod.Invoke(1, 2, 3, 4, 5, 6);
-        await Assert.That(target.VoidMethod_6Count).IsGreaterThan(targetCountBefore);
+        await Assert.That(target.Void_6Count).IsGreaterThan(targetCountBefore);
 
         // 4. Reverted after disposal
-        int otherCountBefore = other.VoidMethod_6Count;
-        other.VoidMethod_6(1, 2, 3, 4, 5, 6);
-        await Assert.That(other.VoidMethod_6Count).IsGreaterThan(otherCountBefore);
+        int otherCountBefore = other.Void_6Count;
+        other.Void_6(1, 2, 3, 4, 5, 6);
+        await Assert.That(other.Void_6Count).IsGreaterThan(otherCountBefore);
     }
 }

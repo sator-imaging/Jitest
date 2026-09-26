@@ -45,8 +45,8 @@ for (int n = 0; n <= 16; n++)
 {
     if (n == 0)
     {
-        GenerateStaticActionTest(staticTestDir, header, 0, "StaticInterceptorActionT0Test", "StaticVoidMethod_0", "StaticTestTargets", "Action", "", "");
-        GenerateInstanceActionTest(instanceTestDir, header, 0, "InstanceInterceptorActionT0Test", "VoidMethod_0", "InstanceTestTargets", "Action", "", "");
+        GenerateStaticActionTest(staticTestDir, header, 0, "StaticInterceptorActionT0Test", "StaticVoid_0", "StaticTestTargets", "Action", "", "");
+        GenerateInstanceActionTest(instanceTestDir, header, 0, "InstanceInterceptorActionT0Test", "Void_0", "InstanceTestTargets", "Action", "", "");
     }
     else if (n <= 15)
     {
@@ -62,7 +62,7 @@ for (int n = 0; n <= 16; n++)
         string[] lambdaParams = Enumerable.Range(1, n).Select(i => $"t{i}").ToArray();
         string lambdaParamsStr = string.Join(", ", lambdaParams);
 
-        GenerateStaticActionTest(staticTestDir, header, n, $"StaticInterceptorActionT{n}Test", $"StaticVoidMethod_{n}", extTargsAct, actDelegateType, callArgsStr, lambdaParamsStr);
+        GenerateStaticActionTest(staticTestDir, header, n, $"StaticInterceptorActionT{n}Test", $"StaticVoid_{n}", extTargsAct, actDelegateType, callArgsStr, lambdaParamsStr);
 
         // Func n: n-1 params, return type int (Func<int, ..., int> has n types total)
         int funcArgCount = n - 1;
@@ -77,9 +77,9 @@ for (int n = 0; n <= 16; n++)
         string[] fnLambdaParams = Enumerable.Range(1, funcArgCount).Select(i => $"t{i}").ToArray();
         string fnLambdaParamsStr = string.Join(", ", fnLambdaParams);
 
-        GenerateStaticFuncTest(staticTestDir, header, n, $"StaticInterceptorFuncT{n}Test", $"StaticGetIntMethod_{n}", extTargsFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
+        GenerateStaticFuncTest(staticTestDir, header, n, $"StaticInterceptorFuncT{n}Test", $"StaticGetInt_{n}", extTargsFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
 
-        GenerateInstanceActionTest(instanceTestDir, header, n, $"InstanceInterceptorActionT{n}Test", $"VoidMethod_{n}", extTargsInstanceAct, actDelegateType, callArgsStr, lambdaParamsStr);
+        GenerateInstanceActionTest(instanceTestDir, header, n, $"InstanceInterceptorActionT{n}Test", $"Void_{n}", extTargsInstanceAct, actDelegateType, callArgsStr, lambdaParamsStr);
         GenerateInstanceFuncTest(instanceTestDir, header, n, $"InstanceInterceptorFuncT{n}Test", $"GetInt_{n}", extTargsInstanceFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
     }
     else // n == 16 (Func16 only)
@@ -96,7 +96,7 @@ for (int n = 0; n <= 16; n++)
         string[] fnLambdaParams = Enumerable.Range(1, funcArgCount).Select(i => $"t{i}").ToArray();
         string fnLambdaParamsStr = string.Join(", ", fnLambdaParams);
 
-        GenerateStaticFuncTest(staticTestDir, header, n, $"StaticInterceptorFuncT{n}Test", $"StaticGetIntMethod_{n}", extTargsFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
+        GenerateStaticFuncTest(staticTestDir, header, n, $"StaticInterceptorFuncT{n}Test", $"StaticGetInt_{n}", extTargsFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
         GenerateInstanceFuncTest(instanceTestDir, header, n, $"InstanceInterceptorFuncT{n}Test", $"GetInt_{n}", extTargsInstanceFn, fnDelegateType, fnCallArgsStr, fnLambdaParamsStr);
     }
 }
@@ -118,16 +118,16 @@ static void GenerateTestTargets(string testDir, string licenseHeader)
     sb.AppendLine("{");
     for (int n = 0; n <= 15; n++)
     {
-        sb.AppendLine($"    public static int StaticVoidMethod_{n}Count;");
+        sb.AppendLine($"    public static int StaticVoid_{n}Count;");
         if (n == 0)
         {
-            sb.AppendLine("    public static void StaticVoidMethod_0() => StaticVoidMethod_0Count++;");
+            sb.AppendLine("    public static void StaticVoid_0() => StaticVoid_0Count++;");
         }
         else
         {
             string pDecl = string.Join(", ", Enumerable.Range(1, n).Select(i => $"int t{i}"));
             string pSum = string.Join(" + ", Enumerable.Range(1, n).Select(i => $"t{i}"));
-            sb.AppendLine($"    public static void StaticVoidMethod_{n}({pDecl}) => StaticVoidMethod_{n}Count += {pSum};");
+            sb.AppendLine($"    public static void StaticVoid_{n}({pDecl}) => StaticVoid_{n}Count += {pSum};");
         }
     }
     for (int n = 1; n <= 16; n++)
@@ -135,13 +135,13 @@ static void GenerateTestTargets(string testDir, string licenseHeader)
         int argCount = n - 1;
         if (argCount == 0)
         {
-            sb.AppendLine($"    public static int StaticGetIntMethod_{n}() => 100 + {n};");
+            sb.AppendLine($"    public static int StaticGetInt_{n}() => 100 + {n};");
         }
         else
         {
             string pDecl = string.Join(", ", Enumerable.Range(1, argCount).Select(i => $"int t{i}"));
             string pSum = string.Join(" + ", Enumerable.Range(1, argCount).Select(i => $"t{i}"));
-            sb.AppendLine($"    public static int StaticGetIntMethod_{n}({pDecl}) => {pSum} + {n} * 10;");
+            sb.AppendLine($"    public static int StaticGetInt_{n}({pDecl}) => {pSum} + {n} * 10;");
         }
     }
     sb.AppendLine("}");
@@ -152,16 +152,16 @@ static void GenerateTestTargets(string testDir, string licenseHeader)
     sb.AppendLine("{");
     for (int n = 0; n <= 15; n++)
     {
-        sb.AppendLine($"    public int VoidMethod_{n}Count;");
+        sb.AppendLine($"    public int Void_{n}Count;");
         if (n == 0)
         {
-            sb.AppendLine("    public void VoidMethod_0() => VoidMethod_0Count++;");
+            sb.AppendLine("    public void Void_0() => Void_0Count++;");
         }
         else
         {
             string pDecl = string.Join(", ", Enumerable.Range(1, n).Select(i => $"int t{i}"));
             string pSum = string.Join(" + ", Enumerable.Range(1, n).Select(i => $"t{i}"));
-            sb.AppendLine($"    public void VoidMethod_{n}({pDecl}) => VoidMethod_{n}Count += {pSum};");
+            sb.AppendLine($"    public void Void_{n}({pDecl}) => Void_{n}Count += {pSum};");
         }
     }
     for (int n = 1; n <= 16; n++)

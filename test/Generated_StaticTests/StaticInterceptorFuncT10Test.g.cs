@@ -16,21 +16,21 @@ namespace Jitest.Test;
 public class StaticInterceptorFuncT10Test
 {
     [Test]
-    public async Task TestStaticGetIntMethod_10()
+    public async Task TestStaticGetInt_10()
     {
-        var originalVal = StaticTestTargets.StaticGetIntMethod_10(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int, int, int, int, int, int, int, int, int, int>("StaticGetIntMethod_10", out Func<int, int, int, int, int, int, int, int, int, int> originalMethod);
+        var originalVal = StaticTestTargets.StaticGetInt_10(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int, int, int, int, int, int, int, int, int, int>("StaticGetInt_10", out Func<int, int, int, int, int, int, int, int, int, int> originalMethod);
 
         using (interceptor.Intercept((t1, t2, t3, t4, t5, t6, t7, t8, t9) => 9999))
         {
-            var res = StaticTestTargets.StaticGetIntMethod_10(1, 2, 3, 4, 5, 6, 7, 8, 9);
+            var res = StaticTestTargets.StaticGetInt_10(1, 2, 3, 4, 5, 6, 7, 8, 9);
             await Assert.That(res).IsEqualTo(9999);
 
             var origRes = originalMethod.Invoke(1, 2, 3, 4, 5, 6, 7, 8, 9);
             await Assert.That(origRes).IsEqualTo(originalVal);
         }
 
-        var afterRes = StaticTestTargets.StaticGetIntMethod_10(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        var afterRes = StaticTestTargets.StaticGetInt_10(1, 2, 3, 4, 5, 6, 7, 8, 9);
         await Assert.That(afterRes).IsEqualTo(originalVal);
     }
 }

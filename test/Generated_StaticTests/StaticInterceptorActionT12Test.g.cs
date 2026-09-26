@@ -16,24 +16,24 @@ namespace Jitest.Test;
 public class StaticInterceptorActionT12Test
 {
     [Test]
-    public async Task TestStaticVoidMethod_12()
+    public async Task TestStaticVoid_12()
     {
-        StaticTestTargets.StaticVoidMethod_12Count = 0;
+        StaticTestTargets.StaticVoid_12Count = 0;
         bool intercepted = false;
-        var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int, int, int, int, int, int, int, int, int, int, int, int>("StaticVoidMethod_12", out Action<int, int, int, int, int, int, int, int, int, int, int, int> originalMethod);
+        var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int, int, int, int, int, int, int, int, int, int, int, int>("StaticVoid_12", out Action<int, int, int, int, int, int, int, int, int, int, int, int> originalMethod);
 
         using (interceptor.Intercept((t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12) => { intercepted = true; }))
         {
-            StaticTestTargets.StaticVoidMethod_12(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
+            StaticTestTargets.StaticVoid_12(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
             await Assert.That(intercepted).IsTrue();
-            await Assert.That(StaticTestTargets.StaticVoidMethod_12Count).IsEqualTo(0);
+            await Assert.That(StaticTestTargets.StaticVoid_12Count).IsEqualTo(0);
 
             originalMethod.Invoke(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
-            await Assert.That(StaticTestTargets.StaticVoidMethod_12Count).IsGreaterThan(0);
+            await Assert.That(StaticTestTargets.StaticVoid_12Count).IsGreaterThan(0);
         }
 
-        StaticTestTargets.StaticVoidMethod_12Count = 0;
-        StaticTestTargets.StaticVoidMethod_12(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
-        await Assert.That(StaticTestTargets.StaticVoidMethod_12Count).IsGreaterThan(0);
+        StaticTestTargets.StaticVoid_12Count = 0;
+        StaticTestTargets.StaticVoid_12(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
+        await Assert.That(StaticTestTargets.StaticVoid_12Count).IsGreaterThan(0);
     }
 }

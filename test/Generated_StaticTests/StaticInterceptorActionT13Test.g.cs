@@ -16,24 +16,24 @@ namespace Jitest.Test;
 public class StaticInterceptorActionT13Test
 {
     [Test]
-    public async Task TestStaticVoidMethod_13()
+    public async Task TestStaticVoid_13()
     {
-        StaticTestTargets.StaticVoidMethod_13Count = 0;
+        StaticTestTargets.StaticVoid_13Count = 0;
         bool intercepted = false;
-        var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int, int, int, int, int, int, int, int, int, int, int, int, int>("StaticVoidMethod_13", out Action<int, int, int, int, int, int, int, int, int, int, int, int, int> originalMethod);
+        var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int, int, int, int, int, int, int, int, int, int, int, int, int>("StaticVoid_13", out Action<int, int, int, int, int, int, int, int, int, int, int, int, int> originalMethod);
 
         using (interceptor.Intercept((t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13) => { intercepted = true; }))
         {
-            StaticTestTargets.StaticVoidMethod_13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+            StaticTestTargets.StaticVoid_13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
             await Assert.That(intercepted).IsTrue();
-            await Assert.That(StaticTestTargets.StaticVoidMethod_13Count).IsEqualTo(0);
+            await Assert.That(StaticTestTargets.StaticVoid_13Count).IsEqualTo(0);
 
             originalMethod.Invoke(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
-            await Assert.That(StaticTestTargets.StaticVoidMethod_13Count).IsGreaterThan(0);
+            await Assert.That(StaticTestTargets.StaticVoid_13Count).IsGreaterThan(0);
         }
 
-        StaticTestTargets.StaticVoidMethod_13Count = 0;
-        StaticTestTargets.StaticVoidMethod_13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
-        await Assert.That(StaticTestTargets.StaticVoidMethod_13Count).IsGreaterThan(0);
+        StaticTestTargets.StaticVoid_13Count = 0;
+        StaticTestTargets.StaticVoid_13(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+        await Assert.That(StaticTestTargets.StaticVoid_13Count).IsGreaterThan(0);
     }
 }
