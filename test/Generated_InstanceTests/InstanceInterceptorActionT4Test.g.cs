@@ -28,10 +28,10 @@ public class InstanceInterceptorActionT4Test
         {
             target.Void_4(1, 2, 3, 4);
             await Assert.That(targetIntercepted).IsTrue();
-            await Assert.That(target.Void_4Count).IsEqualTo(0);
+            await Assert.That(target.Void_4_Count).IsEqualTo(0);
 
             other.Void_4(1, 2, 3, 4);
-            await Assert.That(other.Void_4Count).IsGreaterThan(0);
+            await Assert.That(other.Void_4_Count).IsGreaterThan(0);
         }
 
         // 2. Intercept unsafe (all instances)
@@ -47,13 +47,13 @@ public class InstanceInterceptorActionT4Test
         }
 
         // 3. Original method delegate
-        int targetCountBefore = target.Void_4Count;
+        int targetCountBefore = target.Void_4_Count;
         originalMethod.Invoke(1, 2, 3, 4);
-        await Assert.That(target.Void_4Count).IsGreaterThan(targetCountBefore);
+        await Assert.That(target.Void_4_Count).IsGreaterThan(targetCountBefore);
 
         // 4. Reverted after disposal
-        int otherCountBefore = other.Void_4Count;
+        int otherCountBefore = other.Void_4_Count;
         other.Void_4(1, 2, 3, 4);
-        await Assert.That(other.Void_4Count).IsGreaterThan(otherCountBefore);
+        await Assert.That(other.Void_4_Count).IsGreaterThan(otherCountBefore);
     }
 }

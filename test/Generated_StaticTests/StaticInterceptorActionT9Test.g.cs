@@ -18,7 +18,7 @@ public class StaticInterceptorActionT9Test
     [Test]
     public async Task TestStaticVoid_9()
     {
-        StaticTestTargets.StaticVoid_9Count = 0;
+        StaticTestTargets.StaticVoid_9_Count = 0;
         bool intercepted = false;
         var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int, int, int, int, int, int, int, int, int>("StaticVoid_9", out Action<int, int, int, int, int, int, int, int, int> originalMethod);
 
@@ -26,14 +26,14 @@ public class StaticInterceptorActionT9Test
         {
             StaticTestTargets.StaticVoid_9(1, 2, 3, 4, 5, 6, 7, 8, 9);
             await Assert.That(intercepted).IsTrue();
-            await Assert.That(StaticTestTargets.StaticVoid_9Count).IsEqualTo(0);
+            await Assert.That(StaticTestTargets.StaticVoid_9_Count).IsEqualTo(0);
 
             originalMethod.Invoke(1, 2, 3, 4, 5, 6, 7, 8, 9);
-            await Assert.That(StaticTestTargets.StaticVoid_9Count).IsGreaterThan(0);
+            await Assert.That(StaticTestTargets.StaticVoid_9_Count).IsGreaterThan(0);
         }
 
-        StaticTestTargets.StaticVoid_9Count = 0;
+        StaticTestTargets.StaticVoid_9_Count = 0;
         StaticTestTargets.StaticVoid_9(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        await Assert.That(StaticTestTargets.StaticVoid_9Count).IsGreaterThan(0);
+        await Assert.That(StaticTestTargets.StaticVoid_9_Count).IsGreaterThan(0);
     }
 }

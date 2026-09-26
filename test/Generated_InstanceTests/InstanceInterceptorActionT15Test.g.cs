@@ -28,10 +28,10 @@ public class InstanceInterceptorActionT15Test
         {
             target.Void_15(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
             await Assert.That(targetIntercepted).IsTrue();
-            await Assert.That(target.Void_15Count).IsEqualTo(0);
+            await Assert.That(target.Void_15_Count).IsEqualTo(0);
 
             other.Void_15(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-            await Assert.That(other.Void_15Count).IsGreaterThan(0);
+            await Assert.That(other.Void_15_Count).IsGreaterThan(0);
         }
 
         // 2. Intercept unsafe (all instances)
@@ -47,13 +47,13 @@ public class InstanceInterceptorActionT15Test
         }
 
         // 3. Original method delegate
-        int targetCountBefore = target.Void_15Count;
+        int targetCountBefore = target.Void_15_Count;
         originalMethod.Invoke(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-        await Assert.That(target.Void_15Count).IsGreaterThan(targetCountBefore);
+        await Assert.That(target.Void_15_Count).IsGreaterThan(targetCountBefore);
 
         // 4. Reverted after disposal
-        int otherCountBefore = other.Void_15Count;
+        int otherCountBefore = other.Void_15_Count;
         other.Void_15(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
-        await Assert.That(other.Void_15Count).IsGreaterThan(otherCountBefore);
+        await Assert.That(other.Void_15_Count).IsGreaterThan(otherCountBefore);
     }
 }

@@ -118,16 +118,16 @@ static void GenerateTestTargets(string testDir, string licenseHeader)
     sb.AppendLine("{");
     for (int n = 0; n <= 15; n++)
     {
-        sb.AppendLine($"    public static int StaticVoid_{n}Count;");
+        sb.AppendLine($"    public static int StaticVoid_{n}_Count;");
         if (n == 0)
         {
-            sb.AppendLine("    public static void StaticVoid_0() => StaticVoid_0Count++;");
+            sb.AppendLine("    public static void StaticVoid_0() => StaticVoid_0_Count++;");
         }
         else
         {
             string pDecl = string.Join(", ", Enumerable.Range(1, n).Select(i => $"int t{i}"));
             string pSum = string.Join(" + ", Enumerable.Range(1, n).Select(i => $"t{i}"));
-            sb.AppendLine($"    public static void StaticVoid_{n}({pDecl}) => StaticVoid_{n}Count += {pSum};");
+            sb.AppendLine($"    public static void StaticVoid_{n}({pDecl}) => StaticVoid_{n}_Count += {pSum};");
         }
     }
     for (int n = 1; n <= 16; n++)
@@ -152,16 +152,16 @@ static void GenerateTestTargets(string testDir, string licenseHeader)
     sb.AppendLine("{");
     for (int n = 0; n <= 15; n++)
     {
-        sb.AppendLine($"    public int Void_{n}Count;");
+        sb.AppendLine($"    public int Void_{n}_Count;");
         if (n == 0)
         {
-            sb.AppendLine("    public void Void_0() => Void_0Count++;");
+            sb.AppendLine("    public void Void_0() => Void_0_Count++;");
         }
         else
         {
             string pDecl = string.Join(", ", Enumerable.Range(1, n).Select(i => $"int t{i}"));
             string pSum = string.Join(" + ", Enumerable.Range(1, n).Select(i => $"t{i}"));
-            sb.AppendLine($"    public void Void_{n}({pDecl}) => Void_{n}Count += {pSum};");
+            sb.AppendLine($"    public void Void_{n}({pDecl}) => Void_{n}_Count += {pSum};");
         }
     }
     for (int n = 1; n <= 16; n++)
@@ -193,7 +193,7 @@ static void GenerateStaticActionTest(string dir, string header, int n, string cl
     sb.AppendLine("    [Test]");
     sb.AppendLine($"    public async Task Test{methodName}()");
     sb.AppendLine("    {");
-    sb.AppendLine($"        StaticTestTargets.{methodName}Count = 0;");
+    sb.AppendLine($"        StaticTestTargets.{methodName}_Count = 0;");
     sb.AppendLine("        bool intercepted = false;");
     sb.AppendLine($"        var interceptor = typeof(StaticTestTargets).StaticJitest<{extTargs}>(\"{methodName}\", out {delegateType} originalMethod);");
     sb.AppendLine();
@@ -201,15 +201,15 @@ static void GenerateStaticActionTest(string dir, string header, int n, string cl
     sb.AppendLine("        {");
     sb.AppendLine($"            StaticTestTargets.{methodName}({callArgs});");
     sb.AppendLine("            await Assert.That(intercepted).IsTrue();");
-    sb.AppendLine($"            await Assert.That(StaticTestTargets.{methodName}Count).IsEqualTo(0);");
+    sb.AppendLine($"            await Assert.That(StaticTestTargets.{methodName}_Count).IsEqualTo(0);");
     sb.AppendLine();
     sb.AppendLine($"            originalMethod.Invoke({callArgs});");
-    sb.AppendLine($"            await Assert.That(StaticTestTargets.{methodName}Count).IsGreaterThan(0);");
+    sb.AppendLine($"            await Assert.That(StaticTestTargets.{methodName}_Count).IsGreaterThan(0);");
     sb.AppendLine("        }");
     sb.AppendLine();
-    sb.AppendLine($"        StaticTestTargets.{methodName}Count = 0;");
+    sb.AppendLine($"        StaticTestTargets.{methodName}_Count = 0;");
     sb.AppendLine($"        StaticTestTargets.{methodName}({callArgs});");
-    sb.AppendLine($"        await Assert.That(StaticTestTargets.{methodName}Count).IsGreaterThan(0);");
+    sb.AppendLine($"        await Assert.That(StaticTestTargets.{methodName}_Count).IsGreaterThan(0);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
 
@@ -266,10 +266,10 @@ static void GenerateInstanceActionTest(string dir, string header, int n, string 
     sb.AppendLine("        {");
     sb.AppendLine($"            target.{methodName}({callArgs});");
     sb.AppendLine("            await Assert.That(targetIntercepted).IsTrue();");
-    sb.AppendLine($"            await Assert.That(target.{methodName}Count).IsEqualTo(0);");
+    sb.AppendLine($"            await Assert.That(target.{methodName}_Count).IsEqualTo(0);");
     sb.AppendLine();
     sb.AppendLine($"            other.{methodName}({callArgs});");
-    sb.AppendLine($"            await Assert.That(other.{methodName}Count).IsGreaterThan(0);");
+    sb.AppendLine($"            await Assert.That(other.{methodName}_Count).IsGreaterThan(0);");
     sb.AppendLine("        }");
     sb.AppendLine();
     sb.AppendLine("        // 2. Intercept unsafe (all instances)");
@@ -285,14 +285,14 @@ static void GenerateInstanceActionTest(string dir, string header, int n, string 
     sb.AppendLine("        }");
     sb.AppendLine();
     sb.AppendLine("        // 3. Original method delegate");
-    sb.AppendLine($"        int targetCountBefore = target.{methodName}Count;");
+    sb.AppendLine($"        int targetCountBefore = target.{methodName}_Count;");
     sb.AppendLine($"        originalMethod.Invoke({callArgs});");
-    sb.AppendLine($"        await Assert.That(target.{methodName}Count).IsGreaterThan(targetCountBefore);");
+    sb.AppendLine($"        await Assert.That(target.{methodName}_Count).IsGreaterThan(targetCountBefore);");
     sb.AppendLine();
     sb.AppendLine("        // 4. Reverted after disposal");
-    sb.AppendLine($"        int otherCountBefore = other.{methodName}Count;");
+    sb.AppendLine($"        int otherCountBefore = other.{methodName}_Count;");
     sb.AppendLine($"        other.{methodName}({callArgs});");
-    sb.AppendLine($"        await Assert.That(other.{methodName}Count).IsGreaterThan(otherCountBefore);");
+    sb.AppendLine($"        await Assert.That(other.{methodName}_Count).IsGreaterThan(otherCountBefore);");
     sb.AppendLine("    }");
     sb.AppendLine("}");
 

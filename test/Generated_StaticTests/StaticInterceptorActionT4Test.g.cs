@@ -18,7 +18,7 @@ public class StaticInterceptorActionT4Test
     [Test]
     public async Task TestStaticVoid_4()
     {
-        StaticTestTargets.StaticVoid_4Count = 0;
+        StaticTestTargets.StaticVoid_4_Count = 0;
         bool intercepted = false;
         var interceptor = typeof(StaticTestTargets).StaticJitest<StaticTestTargets, int, int, int, int>("StaticVoid_4", out Action<int, int, int, int> originalMethod);
 
@@ -26,14 +26,14 @@ public class StaticInterceptorActionT4Test
         {
             StaticTestTargets.StaticVoid_4(1, 2, 3, 4);
             await Assert.That(intercepted).IsTrue();
-            await Assert.That(StaticTestTargets.StaticVoid_4Count).IsEqualTo(0);
+            await Assert.That(StaticTestTargets.StaticVoid_4_Count).IsEqualTo(0);
 
             originalMethod.Invoke(1, 2, 3, 4);
-            await Assert.That(StaticTestTargets.StaticVoid_4Count).IsGreaterThan(0);
+            await Assert.That(StaticTestTargets.StaticVoid_4_Count).IsGreaterThan(0);
         }
 
-        StaticTestTargets.StaticVoid_4Count = 0;
+        StaticTestTargets.StaticVoid_4_Count = 0;
         StaticTestTargets.StaticVoid_4(1, 2, 3, 4);
-        await Assert.That(StaticTestTargets.StaticVoid_4Count).IsGreaterThan(0);
+        await Assert.That(StaticTestTargets.StaticVoid_4_Count).IsGreaterThan(0);
     }
 }
