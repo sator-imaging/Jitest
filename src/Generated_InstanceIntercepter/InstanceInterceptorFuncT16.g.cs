@@ -13,23 +13,19 @@ namespace Jitest;
 public sealed class InstanceInterceptorFuncT16<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>
 {
     readonly Interceptor interceptor;
-    readonly Func<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> originalMethodInternal;
+    readonly Func<TTarget, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>, DetourScope> interceptFunc;
 
-    internal InstanceInterceptorFuncT16(Interceptor interceptor, Func<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> originalMethodInternal)
+    internal InstanceInterceptorFuncT16(Interceptor interceptor, Func<TTarget, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>, DetourScope> interceptFunc)
     {
         this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
-        this.originalMethodInternal = originalMethodInternal;
+        this.interceptFunc = interceptFunc ?? throw new ArgumentNullException(nameof(interceptFunc));
     }
 
     /// <summary>Intercepts instance method for specific instance with <see cref="Func&lt;T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16&gt;"/>.</summary>
     public DetourScope Intercept(TTarget instance, Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16> replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        var actual = (TTarget self, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, T11 t11, T12 t12, T13 t13, T14 t14, T15 t15) =>
-            (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))
-                ? replacement.Invoke(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15)
-                : originalMethodInternal.Invoke(self, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15);
-        return interceptor.Intercept(actual);
+        return interceptFunc(instance, replacement);
     }
 
     /// <summary>Intercepts instance method across all instances with <see cref="Func&lt;T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16&gt;"/>.</summary>
@@ -49,8 +45,15 @@ public static partial class InstanceInterceptorExtensions
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
         var interceptor = instance.Jitest<Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>>(methodName, out var originalMethodUser);
-        var originalMethodInternal = originalMethodUser.Method is System.Reflection.Emit.DynamicMethod dm ? (Func<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>)dm.CreateDelegate(typeof(Func<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>)) : (Func<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>)Delegate.CreateDelegate(typeof(Func<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>), originalMethodUser.Method);
-        originalMethod = (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15) => originalMethodInternal.Invoke(instance, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15);
-        return new InstanceInterceptorFuncT16<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(interceptor, originalMethodInternal);
+        var actualMethod = originalMethodUser.Method is System.Reflection.Emit.DynamicMethod dm ? (Func<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>)dm.CreateDelegate(typeof(Func<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>)) : (Func<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>)Delegate.CreateDelegate(typeof(Func<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>), originalMethodUser.Method);
+        originalMethod = (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15) => actualMethod.Invoke(instance, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15);
+        return new InstanceInterceptorFuncT16<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(interceptor, (targetInst, replacement) =>
+        {
+            var actual = (TTarget self, T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6, T7 t7, T8 t8, T9 t9, T10 t10, T11 t11, T12 t12, T13 t13, T14 t14, T15 t15) =>
+                (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, targetInst) : object.ReferenceEquals(self, targetInst))
+                    ? replacement.Invoke(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15)
+                    : actualMethod.Invoke(self, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15);
+            return interceptor.Intercept(actual);
+        });
     }
 }

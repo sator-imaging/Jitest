@@ -13,26 +13,19 @@ namespace Jitest;
 public sealed class InstanceInterceptorActionT1<TTarget, T1>
 {
     readonly Interceptor interceptor;
-    readonly Action<TTarget, T1> originalMethodInternal;
+    readonly Func<TTarget, Action<T1>, DetourScope> interceptFunc;
 
-    internal InstanceInterceptorActionT1(Interceptor interceptor, Action<TTarget, T1> originalMethodInternal)
+    internal InstanceInterceptorActionT1(Interceptor interceptor, Func<TTarget, Action<T1>, DetourScope> interceptFunc)
     {
         this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
-        this.originalMethodInternal = originalMethodInternal;
+        this.interceptFunc = interceptFunc ?? throw new ArgumentNullException(nameof(interceptFunc));
     }
 
     /// <summary>Intercepts instance method for specific instance with <see cref="Action&lt;T1&gt;"/>.</summary>
     public DetourScope Intercept(TTarget instance, Action<T1> replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        var actual = (TTarget self, T1 t1) =>
-        {
-            if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))
-                replacement.Invoke(t1);
-            else
-                originalMethodInternal.Invoke(self, t1);
-        };
-        return interceptor.Intercept(actual);
+        return interceptFunc(instance, replacement);
     }
 
     /// <summary>Intercepts instance method across all instances with <see cref="Action&lt;T1&gt;"/>.</summary>
@@ -52,8 +45,18 @@ public static partial class InstanceInterceptorExtensions
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
         var interceptor = instance.Jitest<Action<T1>>(methodName, out var originalMethodUser);
-        var originalMethodInternal = originalMethodUser.Method is System.Reflection.Emit.DynamicMethod dm ? (Action<TTarget, T1>)dm.CreateDelegate(typeof(Action<TTarget, T1>)) : (Action<TTarget, T1>)Delegate.CreateDelegate(typeof(Action<TTarget, T1>), originalMethodUser.Method);
-        originalMethod = (t1) => originalMethodInternal.Invoke(instance, t1);
-        return new InstanceInterceptorActionT1<TTarget, T1>(interceptor, originalMethodInternal);
+        var actualMethod = originalMethodUser.Method is System.Reflection.Emit.DynamicMethod dm ? (Action<TTarget, T1>)dm.CreateDelegate(typeof(Action<TTarget, T1>)) : (Action<TTarget, T1>)Delegate.CreateDelegate(typeof(Action<TTarget, T1>), originalMethodUser.Method);
+        originalMethod = (t1) => actualMethod.Invoke(instance, t1);
+        return new InstanceInterceptorActionT1<TTarget, T1>(interceptor, (targetInst, replacement) =>
+        {
+            var actual = (TTarget self, T1 t1) =>
+            {
+                if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, targetInst) : object.ReferenceEquals(self, targetInst))
+                    replacement.Invoke(t1);
+                else
+                    actualMethod.Invoke(self, t1);
+            };
+            return interceptor.Intercept(actual);
+        });
     }
 }
