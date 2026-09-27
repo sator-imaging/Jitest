@@ -82,20 +82,12 @@ internal static class Extensions
         const BindingFlags AllBindingFlags = (BindingFlags)(~0);
 
         var method = type.GetMethod(methodName, AllBindingFlags, binder: null, parameters, modifiers: null);
-        if (method == null && parameters.Length > 0)
-        {
-            method = type.GetMethod(methodName, AllBindingFlags, binder: null, parameters[1..], modifiers: null);
-        }
         if (method == null)
         {
             var bt = type.BaseType;
             while (bt != null)
             {
                 method = bt.GetMethod(methodName, AllBindingFlags, binder: null, parameters, modifiers: null);
-                if (method == null && parameters.Length > 0)
-                {
-                    method = bt.GetMethod(methodName, AllBindingFlags, binder: null, parameters[1..], modifiers: null);
-                }
                 if (method != null)
                 {
                     break;
