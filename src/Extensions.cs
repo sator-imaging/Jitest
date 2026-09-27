@@ -53,7 +53,7 @@ internal static class Extensions
     public static Interceptor Jitest<TDelegate>(this object instance, string methodName, out TDelegate originalMethod)
         where TDelegate : Delegate
     {
-        var (method, dele) = ResolveMethod<TDelegate>(instance.GetType(), methodName, instance);
+        var (method, dele) = ResolveMethod<TDelegate>(instance.GetType(), methodName);
         originalMethod = dele;
         return new(method, instance);
     }
@@ -65,35 +65,37 @@ internal static class Extensions
     public static Interceptor Jitest<TDelegate>(this Type type, string methodName, out TDelegate originalMethod)
         where TDelegate : Delegate
     {
-        var (method, dele) = ResolveMethod<TDelegate>(type, methodName, instance: null);
+        var (method, dele) = ResolveMethod<TDelegate>(type, methodName);
         originalMethod = dele;
         return new(method, instance: null);
     }
 
 
-    static (MethodInfo, TDelegate) ResolveMethod<TDelegate>(Type type, string methodName, object? instance = null)
+    static (MethodInfo, TDelegate) ResolveMethod<TDelegate>(Type type, string methodName)
         where TDelegate : Delegate
     {
         var parameters = typeof(TDelegate).Name.StartsWith("Func", StringComparison.Ordinal)  // .Name == Func`N
             ? typeof(TDelegate).GenericTypeArguments[..^1]
             : typeof(TDelegate).GenericTypeArguments;
 
-        var methodParams = parameters;
-        if (instance != null && parameters.Length > 0 && parameters[0].IsAssignableFrom(type))
-        {
-            methodParams = parameters[1..];
-        }
-
         // Allow enum conversion
         const BindingFlags AllBindingFlags = (BindingFlags)(~0);
 
-        var method = type.GetMethod(methodName, AllBindingFlags, binder: null, methodParams, modifiers: null);
+        var method = type.GetMethod(methodName, AllBindingFlags, binder: null, parameters, modifiers: null);
+        if (method == null && parameters.Length > 0)
+        {
+            method = type.GetMethod(methodName, AllBindingFlags, binder: null, parameters[1..], modifiers: null);
+        }
         if (method == null)
         {
             var bt = type.BaseType;
             while (bt != null)
             {
-                method = bt.GetMethod(methodName, AllBindingFlags, binder: null, methodParams, modifiers: null);
+                method = bt.GetMethod(methodName, AllBindingFlags, binder: null, parameters, modifiers: null);
+                if (method == null && parameters.Length > 0)
+                {
+                    method = bt.GetMethod(methodName, AllBindingFlags, binder: null, parameters[1..], modifiers: null);
+                }
                 if (method != null)
                 {
                     break;
@@ -108,42 +110,21 @@ internal static class Extensions
         if (method == null)
         {
             throw new JitestException(
-                $"Method '{methodName}({string.Join(", ", methodParams.Select(static x => x.Name))})' is not found in the type hierarchy of '{type}'");
+                $"Method '{methodName}({string.Join(", ", parameters.Select(static x => x.Name))})' is not found in the type hierarchy of '{type}'");
         }
 
         try
         {
             var cloneMethod = OriginalMethodByMethodInfo.GetOrAdd(
                 method,
-                static (methodKey) =>
+                static (method) =>
                 {
-                    using var dmd = new DynamicMethodDefinition(methodKey.MethodInfo);
+                    using var dmd = new DynamicMethodDefinition(method.MethodInfo);
                     var copy = dmd.Generate();
-                    try
-                    {
-                        return copy.CreateDelegate<TDelegate>();
-                    }
-                    catch (ArgumentException)
-                    {
-                        return null!;
-                    }
-                }) as TDelegate;
 
-            if (cloneMethod == null && instance != null)
-            {
-                using var dmd = new DynamicMethodDefinition(method);
-                var copy = dmd.Generate();
-                try
-                {
-                    cloneMethod = copy.CreateDelegate<TDelegate>();
-                }
-                catch (ArgumentException)
-                {
-                    cloneMethod = copy.CreateDelegate<TDelegate>(instance);
-                }
-            }
-
-            if (cloneMethod == null) throw new JitestException("Must not be reached");
+                    return copy.CreateDelegate<TDelegate>();
+                })
+                as TDelegate ?? throw new JitestException("Must not be reached");
 
             return (method, cloneMethod);
         }
