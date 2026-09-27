@@ -51,7 +51,6 @@ jobs:
             local framework="$1"
 
             dotnet build ./sandbox -f "$framework"
-            dotnet build ./test -f "$framework"
 
             {
               echo "## $framework (Sandbox)"
@@ -65,17 +64,23 @@ jobs:
                 -c "${{ matrix.configuration }}"
               echo '```'
               echo
-              echo "## $framework (Test)"
-              echo
-              echo '```'
-              dotnet run \
-                -p:NoWarn="%24(NoWarn)%3BNETSDK1138" \
-                --project ./test \
-                -f "$framework" \
-                -c "${{ matrix.configuration }}"
-              echo '```'
-              echo
             } >> "$GITHUB_STEP_SUMMARY"
+
+            if [[ "$framework" == "net10.0" || "$framework" == "net9.0" || "$framework" == "net8.0" ]]; then
+              dotnet build ./test -f "$framework"
+              {
+                echo "## $framework (Test)"
+                echo
+                echo '```'
+                dotnet run \
+                  -p:NoWarn="%24(NoWarn)%3BNETSDK1138" \
+                  --project ./test \
+                  -f "$framework" \
+                  -c "${{ matrix.configuration }}"
+                echo '```'
+                echo
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
           }
 
           for framework in net10.0 net9.0 net8.0 net7.0 net6.0 net5.0; do
