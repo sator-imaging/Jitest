@@ -235,7 +235,8 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {actUser} originalMethod)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (instance == null) throw new ArgumentNullException(nameof(instance));");
-    sb.AppendLine($"        var interceptor = instance.Jitest<{actInternal}>(methodName, out var originalMethodInternal);");
+    sb.AppendLine($"        var interceptor = instance.Jitest<{actUser}>(methodName, out var originalMethodUser);");
+    sb.AppendLine($"        var originalMethodInternal = originalMethodUser.Method is System.Reflection.Emit.DynamicMethod dm ? ({actInternal})dm.CreateDelegate(typeof({actInternal})) : ({actInternal})Delegate.CreateDelegate(typeof({actInternal}), originalMethodUser.Method);");
     sb.AppendLine($"        originalMethod = ({actInvokeArgs}) => originalMethodInternal.Invoke(instance{actParamDeclArgs});");
     sb.AppendLine($"        return new {className}<{classTparams}>(interceptor, originalMethodInternal);");
     sb.AppendLine("    }");
@@ -288,7 +289,8 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {fnUser} originalMethod)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (instance == null) throw new ArgumentNullException(nameof(instance));");
-    sb.AppendLine($"        var interceptor = instance.Jitest<{fnInternal}>(methodName, out var originalMethodInternal);");
+    sb.AppendLine($"        var interceptor = instance.Jitest<{fnUser}>(methodName, out var originalMethodUser);");
+    sb.AppendLine($"        var originalMethodInternal = originalMethodUser.Method is System.Reflection.Emit.DynamicMethod dm ? ({fnInternal})dm.CreateDelegate(typeof({fnInternal})) : ({fnInternal})Delegate.CreateDelegate(typeof({fnInternal}), originalMethodUser.Method);");
     sb.AppendLine($"        originalMethod = ({fnInvokeArgs}) => originalMethodInternal.Invoke(instance{fnParamDeclArgs});");
     sb.AppendLine($"        return new {className}<{classTparams}>(interceptor, originalMethodInternal);");
     sb.AppendLine("    }");

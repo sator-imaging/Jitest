@@ -51,7 +51,8 @@ public static partial class InstanceInterceptorExtensions
     public static InstanceInterceptorActionT1<TTarget, T1> InstanceJitest<TTarget, T1>(this TTarget instance, string methodName, out Action<T1> originalMethod)
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
-        var interceptor = instance.Jitest<Action<TTarget, T1>>(methodName, out var originalMethodInternal);
+        var interceptor = instance.Jitest<Action<T1>>(methodName, out var originalMethodUser);
+        var originalMethodInternal = originalMethodUser.Method is System.Reflection.Emit.DynamicMethod dm ? (Action<TTarget, T1>)dm.CreateDelegate(typeof(Action<TTarget, T1>)) : (Action<TTarget, T1>)Delegate.CreateDelegate(typeof(Action<TTarget, T1>), originalMethodUser.Method);
         originalMethod = (t1) => originalMethodInternal.Invoke(instance, t1);
         return new InstanceInterceptorActionT1<TTarget, T1>(interceptor, originalMethodInternal);
     }

@@ -51,7 +51,8 @@ public static partial class InstanceInterceptorExtensions
     public static InstanceInterceptorActionT11<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> InstanceJitest<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(this TTarget instance, string methodName, out Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> originalMethod)
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
-        var interceptor = instance.Jitest<Action<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>(methodName, out var originalMethodInternal);
+        var interceptor = instance.Jitest<Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>>(methodName, out var originalMethodUser);
+        var originalMethodInternal = originalMethodUser.Method is System.Reflection.Emit.DynamicMethod dm ? (Action<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>)dm.CreateDelegate(typeof(Action<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>)) : (Action<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>)Delegate.CreateDelegate(typeof(Action<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>), originalMethodUser.Method);
         originalMethod = (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11) => originalMethodInternal.Invoke(instance, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11);
         return new InstanceInterceptorActionT11<TTarget, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(interceptor, originalMethodInternal);
     }
