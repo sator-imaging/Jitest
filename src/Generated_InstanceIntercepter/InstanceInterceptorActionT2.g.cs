@@ -13,26 +13,19 @@ namespace Jitest;
 public sealed class InstanceInterceptorActionT2<TTarget, T1, T2>
 {
     readonly Interceptor interceptor;
-    readonly Action<T1, T2> originalMethod;
+    readonly Func<TTarget, Action<T1, T2>, DetourScope> interceptFunc;
 
-    internal InstanceInterceptorActionT2(Interceptor interceptor, Action<T1, T2> originalMethod)
+    internal InstanceInterceptorActionT2(Interceptor interceptor, Func<TTarget, Action<T1, T2>, DetourScope> interceptFunc)
     {
         this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));
-        this.originalMethod = originalMethod;
+        this.interceptFunc = interceptFunc ?? throw new ArgumentNullException(nameof(interceptFunc));
     }
 
     /// <summary>Intercepts instance method for specific instance with <see cref="Action&lt;T1, T2&gt;"/>.</summary>
     public DetourScope Intercept(TTarget instance, Action<T1, T2> replacement)
     {
         if (replacement == null) throw new ArgumentNullException(nameof(replacement));
-        var actual = (TTarget self, T1 t1, T2 t2) =>
-        {
-            if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))
-                replacement.Invoke(t1, t2);
-            else
-                originalMethod.Invoke(t1, t2);
-        };
-        return interceptor.Intercept(actual);
+        return interceptFunc(instance, replacement);
     }
 
     /// <summary>Intercepts instance method across all instances with <see cref="Action&lt;T1, T2&gt;"/>.</summary>
@@ -51,7 +44,19 @@ public static partial class InstanceInterceptorExtensions
     public static InstanceInterceptorActionT2<TTarget, T1, T2> InstanceJitest<TTarget, T1, T2>(this TTarget instance, string methodName, out Action<T1, T2> originalMethod)
     {
         if (instance == null) throw new ArgumentNullException(nameof(instance));
-        var interceptor = instance.Jitest<Action<T1, T2>>(methodName, out originalMethod);
-        return new InstanceInterceptorActionT2<TTarget, T1, T2>(interceptor, originalMethod);
+        var interceptor = instance.Jitest<Action<T1, T2>>(methodName, out var originalMethodUser);
+        var actualMethod = originalMethodUser.Method is System.Reflection.Emit.DynamicMethod dm ? (Action<TTarget, T1, T2>)dm.CreateDelegate(typeof(Action<TTarget, T1, T2>)) : (Action<TTarget, T1, T2>)Delegate.CreateDelegate(typeof(Action<TTarget, T1, T2>), originalMethodUser.Method);
+        originalMethod = (t1, t2) => actualMethod.Invoke(instance, t1, t2);
+        return new InstanceInterceptorActionT2<TTarget, T1, T2>(interceptor, (targetInst, replacement) =>
+        {
+            var actual = (TTarget self, T1 t1, T2 t2) =>
+            {
+                if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, targetInst) : object.ReferenceEquals(self, targetInst))
+                    replacement.Invoke(t1, t2);
+                else
+                    actualMethod.Invoke(self, t1, t2);
+            };
+            return interceptor.Intercept(actual);
+        });
     }
 }

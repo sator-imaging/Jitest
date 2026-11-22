@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="./src/Jitest.csproj" />
   <Project Path="./sandbox/Jitest.Sandbox.csproj" />
+  <Project Path="./test/Jitest.Test.csproj" />
   <Project Path="./test-integration/Jitest.IntegrationTest.csproj" />
 </Solution>

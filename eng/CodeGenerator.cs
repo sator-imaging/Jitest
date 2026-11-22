@@ -36,14 +36,11 @@ namespace Jitest;
 
 for (int n = 0; n <= 16; n++)
 {
-    bool hasAction = n <= 15;
-    bool hasFunc = n >= 1;
-
     if (n == 0)
     {
         // Action 0 params
         GenerateStaticAction(staticDir, header, 0, "StaticInterceptorActionT0", "TTarget", "Action", "TTarget", "TTarget");
-        GenerateInstanceAction(instanceDir, header, 0, "InstanceInterceptorActionT0", "TTarget", "Action", "TTarget", "TTarget", "Action<TTarget>", "", "");
+        GenerateInstanceAction(instanceDir, header, 0, "InstanceInterceptorActionT0", "TTarget", "Action", "TTarget", "TTarget", "Action<TTarget>", "", "", "");
     }
     else if (n <= 15)
     {
@@ -62,6 +59,7 @@ for (int n = 0; n <= 16; n++)
         string actInternal = $"Action<TTarget, {string.Join(", ", tList)}>";
         string actParamDecl = ", " + string.Join(", ", pDecl);
         string actInvokeArgs = string.Join(", ", iArgs);
+        string actParamDeclArgs = ", " + string.Join(", ", iArgs);
 
         string classTparamsFn = $"TTarget, {string.Join(", ", tList)}";
         string fnUser = $"Func<{string.Join(", ", tList)}>";
@@ -76,12 +74,13 @@ for (int n = 0; n <= 16; n++)
         }
         string fnParamDecl = fnPDecl.Length > 0 ? ", " + string.Join(", ", fnPDecl) : "";
         string fnInvokeArgs = string.Join(", ", fnIArgs);
+        string fnParamDeclArgs = fnIArgs.Length > 0 ? ", " + string.Join(", ", fnIArgs) : "";
 
         GenerateStaticAction(staticDir, header, n, $"StaticInterceptorActionT{n}", classTparamsAct, actUser, classTparamsAct, classTparamsAct);
         GenerateStaticFunc(staticDir, header, n, $"StaticInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn);
 
-        GenerateInstanceAction(instanceDir, header, n, $"InstanceInterceptorActionT{n}", classTparamsAct, actUser, classTparamsAct, classTparamsAct, actInternal, actParamDecl, actInvokeArgs);
-        GenerateInstanceFunc(instanceDir, header, n, $"InstanceInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn, fnInternal, fnParamDecl, fnInvokeArgs);
+        GenerateInstanceAction(instanceDir, header, n, $"InstanceInterceptorActionT{n}", classTparamsAct, actUser, classTparamsAct, classTparamsAct, actInternal, actParamDecl, actInvokeArgs, actParamDeclArgs);
+        GenerateInstanceFunc(instanceDir, header, n, $"InstanceInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn, fnInternal, fnParamDecl, fnInvokeArgs, fnParamDeclArgs);
     }
     else // n == 16
     {
@@ -101,9 +100,10 @@ for (int n = 0; n <= 16; n++)
         }
         string fnParamDecl = fnPDecl.Length > 0 ? ", " + string.Join(", ", fnPDecl) : "";
         string fnInvokeArgs = string.Join(", ", fnIArgs);
+        string fnParamDeclArgs = fnIArgs.Length > 0 ? ", " + string.Join(", ", fnIArgs) : "";
 
         GenerateStaticFunc(staticDir, header, n, $"StaticInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn);
-        GenerateInstanceFunc(instanceDir, header, n, $"InstanceInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn, fnInternal, fnParamDecl, fnInvokeArgs);
+        GenerateInstanceFunc(instanceDir, header, n, $"InstanceInterceptorFuncT{n}", classTparamsFn, fnUser, classTparamsFn, classTparamsFn, fnInternal, fnParamDecl, fnInvokeArgs, fnParamDeclArgs);
     }
 }
 
@@ -185,7 +185,7 @@ static void GenerateStaticFunc(string dir, string header, int n, string classNam
     File.WriteAllText(Path.Combine(dir, $"{className}{FileExtension}"), sb.ToString());
 }
 
-static void GenerateInstanceAction(string dir, string header, int n, string className, string classTparams, string actUser, string extTargs, string extTparams, string actInternal, string actParamDecl, string actInvokeArgs)
+static void GenerateInstanceAction(string dir, string header, int n, string className, string classTparams, string actUser, string extTargs, string extTparams, string actInternal, string actParamDecl, string actInvokeArgs, string actParamDeclArgs = "")
 {
     string actUserXml = HttpUtility.HtmlEncode(actUser);
     StringBuilder sb = new StringBuilder();
@@ -194,26 +194,19 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine($"public sealed class {className}<{classTparams}>");
     sb.AppendLine("{");
     sb.AppendLine("    readonly Interceptor interceptor;");
-    sb.AppendLine($"    readonly {actUser} originalMethod;");
+    sb.AppendLine($"    readonly Func<TTarget, {actUser}, DetourScope> interceptFunc;");
     sb.AppendLine();
-    sb.AppendLine($"    internal {className}(Interceptor interceptor, {actUser} originalMethod)");
+    sb.AppendLine($"    internal {className}(Interceptor interceptor, Func<TTarget, {actUser}, DetourScope> interceptFunc)");
     sb.AppendLine("    {");
     sb.AppendLine("        this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));");
-    sb.AppendLine("        this.originalMethod = originalMethod;");
+    sb.AppendLine("        this.interceptFunc = interceptFunc ?? throw new ArgumentNullException(nameof(interceptFunc));");
     sb.AppendLine("    }");
     sb.AppendLine();
     sb.AppendLine($"    /// <summary>Intercepts instance method for specific instance with <see cref=\"{actUserXml}\"/>.</summary>");
     sb.AppendLine($"    public DetourScope Intercept(TTarget instance, {actUser} replacement)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
-    sb.AppendLine($"        var actual = (TTarget self{actParamDecl}) =>");
-    sb.AppendLine("        {");
-    sb.AppendLine("            if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))");
-    sb.AppendLine($"                replacement.Invoke({actInvokeArgs});");
-    sb.AppendLine("            else");
-    sb.AppendLine($"                originalMethod.Invoke({actInvokeArgs});");
-    sb.AppendLine("        };");
-    sb.AppendLine("        return interceptor.Intercept(actual);");
+    sb.AppendLine("        return interceptFunc(instance, replacement);");
     sb.AppendLine("    }");
     sb.AppendLine();
     sb.AppendLine($"    /// <summary>Intercepts instance method across all instances with <see cref=\"{actUserXml}\"/>.</summary>");
@@ -232,15 +225,27 @@ static void GenerateInstanceAction(string dir, string header, int n, string clas
     sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {actUser} originalMethod)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (instance == null) throw new ArgumentNullException(nameof(instance));");
-    sb.AppendLine($"        var interceptor = instance.Jitest<{actUser}>(methodName, out originalMethod);");
-    sb.AppendLine($"        return new {className}<{classTparams}>(interceptor, originalMethod);");
+    sb.AppendLine($"        var interceptor = instance.Jitest<{actUser}>(methodName, out var originalMethodUser);");
+    sb.AppendLine($"        var actualMethod = originalMethodUser.Method is System.Reflection.Emit.DynamicMethod dm ? ({actInternal})dm.CreateDelegate(typeof({actInternal})) : ({actInternal})Delegate.CreateDelegate(typeof({actInternal}), originalMethodUser.Method);");
+    sb.AppendLine($"        originalMethod = ({actInvokeArgs}) => actualMethod.Invoke(instance{actParamDeclArgs});");
+    sb.AppendLine($"        return new {className}<{classTparams}>(interceptor, (targetInst, replacement) =>");
+    sb.AppendLine("        {");
+    sb.AppendLine($"            var actual = (TTarget self{actParamDecl}) =>");
+    sb.AppendLine("            {");
+    sb.AppendLine("                if (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, targetInst) : object.ReferenceEquals(self, targetInst))");
+    sb.AppendLine($"                    replacement.Invoke({actInvokeArgs});");
+    sb.AppendLine("                else");
+    sb.AppendLine($"                    actualMethod.Invoke(self{actParamDeclArgs});");
+    sb.AppendLine("            };");
+    sb.AppendLine("            return interceptor.Intercept(actual);");
+    sb.AppendLine("        });");
     sb.AppendLine("    }");
     sb.AppendLine("}");
 
     File.WriteAllText(Path.Combine(dir, $"{className}{FileExtension}"), sb.ToString());
 }
 
-static void GenerateInstanceFunc(string dir, string header, int n, string className, string classTparams, string fnUser, string extTargs, string extTparams, string fnInternal, string fnParamDecl, string fnInvokeArgs)
+static void GenerateInstanceFunc(string dir, string header, int n, string className, string classTparams, string fnUser, string extTargs, string extTparams, string fnInternal, string fnParamDecl, string fnInvokeArgs, string fnParamDeclArgs = "")
 {
     string fnUserXml = HttpUtility.HtmlEncode(fnUser);
     StringBuilder sb = new StringBuilder();
@@ -249,23 +254,19 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine($"public sealed class {className}<{classTparams}>");
     sb.AppendLine("{");
     sb.AppendLine("    readonly Interceptor interceptor;");
-    sb.AppendLine($"    readonly {fnUser} originalMethod;");
+    sb.AppendLine($"    readonly Func<TTarget, {fnUser}, DetourScope> interceptFunc;");
     sb.AppendLine();
-    sb.AppendLine($"    internal {className}(Interceptor interceptor, {fnUser} originalMethod)");
+    sb.AppendLine($"    internal {className}(Interceptor interceptor, Func<TTarget, {fnUser}, DetourScope> interceptFunc)");
     sb.AppendLine("    {");
     sb.AppendLine("        this.interceptor = interceptor ?? throw new ArgumentNullException(nameof(interceptor));");
-    sb.AppendLine("        this.originalMethod = originalMethod;");
+    sb.AppendLine("        this.interceptFunc = interceptFunc ?? throw new ArgumentNullException(nameof(interceptFunc));");
     sb.AppendLine("    }");
     sb.AppendLine();
     sb.AppendLine($"    /// <summary>Intercepts instance method for specific instance with <see cref=\"{fnUserXml}\"/>.</summary>");
     sb.AppendLine($"    public DetourScope Intercept(TTarget instance, {fnUser} replacement)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (replacement == null) throw new ArgumentNullException(nameof(replacement));");
-    sb.AppendLine($"        var actual = (TTarget self{fnParamDecl}) =>");
-    sb.AppendLine("            (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, instance) : object.ReferenceEquals(self, instance))");
-    sb.AppendLine($"                ? replacement.Invoke({fnInvokeArgs})");
-    sb.AppendLine($"                : originalMethod.Invoke({fnInvokeArgs});");
-    sb.AppendLine("        return interceptor.Intercept(actual);");
+    sb.AppendLine("        return interceptFunc(instance, replacement);");
     sb.AppendLine("    }");
     sb.AppendLine();
     sb.AppendLine($"    /// <summary>Intercepts instance method across all instances with <see cref=\"{fnUserXml}\"/>.</summary>");
@@ -284,8 +285,17 @@ static void GenerateInstanceFunc(string dir, string header, int n, string classN
     sb.AppendLine($"    public static {className}<{classTparams}> InstanceJitest<{extTparams}>(this TTarget instance, string methodName, out {fnUser} originalMethod)");
     sb.AppendLine("    {");
     sb.AppendLine("        if (instance == null) throw new ArgumentNullException(nameof(instance));");
-    sb.AppendLine($"        var interceptor = instance.Jitest<{fnUser}>(methodName, out originalMethod);");
-    sb.AppendLine($"        return new {className}<{classTparams}>(interceptor, originalMethod);");
+    sb.AppendLine($"        var interceptor = instance.Jitest<{fnUser}>(methodName, out var originalMethodUser);");
+    sb.AppendLine($"        var actualMethod = originalMethodUser.Method is System.Reflection.Emit.DynamicMethod dm ? ({fnInternal})dm.CreateDelegate(typeof({fnInternal})) : ({fnInternal})Delegate.CreateDelegate(typeof({fnInternal}), originalMethodUser.Method);");
+    sb.AppendLine($"        originalMethod = ({fnInvokeArgs}) => actualMethod.Invoke(instance{fnParamDeclArgs});");
+    sb.AppendLine($"        return new {className}<{classTparams}>(interceptor, (targetInst, replacement) =>");
+    sb.AppendLine("        {");
+    sb.AppendLine($"            var actual = (TTarget self{fnParamDecl}) =>");
+    sb.AppendLine("                (typeof(TTarget).IsValueType ? EqualityComparer<TTarget>.Default.Equals(self, targetInst) : object.ReferenceEquals(self, targetInst))");
+    sb.AppendLine($"                    ? replacement.Invoke({fnInvokeArgs})");
+    sb.AppendLine($"                    : actualMethod.Invoke(self{fnParamDeclArgs});");
+    sb.AppendLine("            return interceptor.Intercept(actual);");
+    sb.AppendLine("        });");
     sb.AppendLine("    }");
     sb.AppendLine("}");
 

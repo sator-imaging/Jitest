@@ -12,7 +12,7 @@ namespace Jitest;
 /// <summary>
 /// Jitest extensions.
 /// </summary>
-public static class Extensions
+internal static class Extensions
 {
     static readonly ConcurrentDictionary<EquatableMethodInfo, Delegate> OriginalMethodByMethodInfo = new();
 
